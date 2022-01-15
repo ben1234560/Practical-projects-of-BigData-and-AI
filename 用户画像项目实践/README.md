@@ -93,3 +93,47 @@ OLAP(Online Analytical Processing, 联机式分析处理): 数据分析，强调
 
 ### 二.架构
 
+![用户画像架构图](assets/用户画像架构图.png)
+
+> 以下内容后续会展开。
+>
+> 注(1) Hive、Hadoop、Presto：数仓存储数据的，也是HDFS。
+>
+> 注(2) Log：用户的行为数据。
+>
+> 注(3) Symbolize features：拿到象征的标签（通过SQL获取）。
+>
+> 注(4) Base features：拿到基础的标签（通过SQL获取）。
+>
+> 注(5) BitMap：利用位图，提取特征里的内容。
+>
+> 注(6) ClickHouse：存储标签的库。
+>
+> User content：用户浏览的内容。
+>
+> 注(7)  User content features：利用Spark的技术结合用户浏览内容和关键词，拿到用户的内容相关的特征。
+>
+> 注(8) Content：相关文章信息。
+>
+> Spark：包含Spark MLlib，spark MLlib 是spark中可以扩展的机器学习库，它有一系列的机器学习算法和实用程序组成。包括分类、回归、聚类、协同过滤等。
+>
+> 注(9) HanLP：用以提取实体词技术（非标点符号等）。
+>
+> 注(10) word：提取到的实体词（非标点符号等）。
+>
+> 注(11) TF-IDF：用以提取关键字的技术。
+>
+> 注(12) Key Words：提取到关键字。
+>
+> 注(13) Word2Vec：用以出标签向量的技术。
+>
+> 注(14) Word embedding：提取到标签向量。
+>
+> 注(15) User content embedding：标签向量结合用户内容特征，形成用户的画像。
+>
+> 注(16) milvus：存到快速的向量搜索引擎。
+>
+> 注(17) Springboot：写个代码打通查询的接口。
+>
+> 注(18) 开放API：提供查询接口。
+
