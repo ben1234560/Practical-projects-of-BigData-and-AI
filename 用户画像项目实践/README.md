@@ -93,7 +93,11 @@ OLAP(Online Analytical Processing, 联机式分析处理): 数据分析，强调
 
 ### 二.架构
 
+#### 1.架构图
+
 ![用户画像架构图](assets/用户画像架构图.png)
+
+从HDFS中提取用户和文章的信息，并开放出API接口供调用。
 
 > 以下内容后续会展开。
 >
@@ -101,9 +105,9 @@ OLAP(Online Analytical Processing, 联机式分析处理): 数据分析，强调
 >
 > 注(2) Log：用户的行为数据。
 >
-> 注(3) Symbolize features：拿到象征的标签（通过SQL获取）。
+> 注(3) Symbolize features：拿到象征/统计类的标签（通过SQL获取，如近期点击次数）。
 >
-> 注(4) Base features：拿到基础的标签（通过SQL获取）。
+> 注(4) Base features：拿到基础的标签（通过SQL获取，如性别）。
 >
 > 注(5) BitMap：利用位图，提取特征里的内容。
 >
@@ -113,7 +117,7 @@ OLAP(Online Analytical Processing, 联机式分析处理): 数据分析，强调
 >
 > 注(7)  User content features：利用Spark的技术结合用户浏览内容和关键词，拿到用户的内容相关的特征。
 >
-> 注(8) Content：相关文章信息。
+> 注(8) Content：相关文章。
 >
 > Spark：包含Spark MLlib，spark MLlib 是spark中可以扩展的机器学习库，它有一系列的机器学习算法和实用程序组成。包括分类、回归、聚类、协同过滤等。
 >
@@ -123,17 +127,38 @@ OLAP(Online Analytical Processing, 联机式分析处理): 数据分析，强调
 >
 > 注(11) TF-IDF：用以提取关键字的技术。
 >
-> 注(12) Key Words：提取到关键字。
+> 注(12) Key Words：提取到关键字（代表某个文章的关键字）。
 >
 > 注(13) Word2Vec：用以出标签向量的技术。
 >
 > 注(14) Word embedding：提取到标签向量。
 >
-> 注(15) User content embedding：标签向量结合用户内容特征，形成用户的画像。
+> 注(15) User content embedding：标签向量结合用户内容特征，形成用户的画像，即不同的用户都喜欢哪些文章哪些关键信息。
 >
 > 注(16) milvus：存到快速的向量搜索引擎。
 >
 > 注(17) Springboot：写个代码打通查询的接口。
 >
 > 注(18) 开放API：提供查询接口。
+
+
+
+#### 2.算法
+
+~~~python
+Word2vec: 获取词向量
+navie bayes: 文本分类
+TF-IDF: 关键字提取
+HanLP/JieBa:中文分词工具
+~~~
+
+
+
+### 三.部署实施
+
+#### 1.Base feature
+
+​	从用户行为日志中提取的数据（ods_news.event_ro和ods_news.user_ro）:[性别、年龄、电话归属地、邮箱、手机号码]，通过spark sql将其最终写入到clickhouse
+
+​	我们的数据是直接写入到ClickHouse中的，所以hdfs中并没有数据产生。如果想要使用presto或者hive这样的工具查询数据是没有的，只能通过clickhouse。所以我们应该在保存到clickhouse的同时也想hdfs存放一份数据，通过两种做法，如1.通过spark sql向clickhouse写的时候同时保存一份到hdfs；2.通过presto直接执行相同的逻辑。这里我们使用的第一种方法。
 
