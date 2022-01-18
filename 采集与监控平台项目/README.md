@@ -108,3 +108,14 @@
 ##### 3.2. Flume Interceptor 二次开发
 
 因为我们的行为数据是经过BASE64编码的（下方架构会有说明），但落地到HDFS时如果我们需要直接用日志中的某个字段值作为我们HDFS上的目录划分，就必须先对BASE64进行编码，然后取出字段值放到Flume的头信息中，在Sink端配置使用。
+
+
+
+### 三. 架构及阐述——核心
+
+- 采集`架构一`采用LVS+Nginx(OpenResty)+Lua+Flume+Sqoop+Hadoop+Hive+Azkaban+SpringBoot
+- 采集`架构二`采用LVS+Nginx(OpenResty)+Lua+Kafka+Sqoop+DataX+Hadoop+Hive+Azkaban+SpringBoot
+- 整体监控架构采用`Prometheus`+`Grafana`+`IM`方案
+- 本项目中的组件监控`ngingx-lua-prometheus`+`flume-expoter`+`Prometheus`+`Grafana`+`Supervisor`+`IM`
+- 元数据管理及实施数据接收`FRP(Ngrok)`+`Supervisor`+`Metaserver`+`qfapp`
+
