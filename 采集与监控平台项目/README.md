@@ -324,3 +324,159 @@ src=\"http://fwimage.cnfanews.com/websiteimg/2020/20200421/29002919/
 
 > 例如：我们用一天机器作为数据收集的机器，但是单台的机器性能是有限的，比如4C8G单台机器只能抗住我们`10000 QPS`，但我们的流量高峰有`15000 QPS`，那我们再加一台机器就可以了。但是这两台机器如何同一对外提供服务呢，我们的目的简单来讲有两点，第一，对外是一个IP提供服务。第二，两台机器要相对均衡分配，每天机器都分到`7500 QPS`。那LVS就可以实现我们的目的，那我们再说一个LVS最简单的流量调度算法，Round Robin Scheduling （RR）轮询算法，就是一次把请求分配给RS(real server)，就是我们的两台机器。LVS有8种调度算法，来满足不同场景的需求，在大数据这门课程中，并不需要我们掌握。另外对于负载均衡（SLB），LVS只是负载均衡的一种实现方式，不要片面的认为LVS就是SLB。
 
+##### 4.2.2. Nginx & Lua 数据埋点接口
+
+> 写在前面的话：我们在本节中使用Lua，并没用使用Lua直接写入Kafka的模型，因为当前Kafka我们还没有学习，这里通过Lua写access日志，对于写Kafka的模式对应前文的架构图而，等学完Kafka后，我们将采用写Kafka的方式
+
+前文框架阐述中我们已经说过，将使用Nginx作为数据采集的HTTP服务，词小节我们会对Nginx及其部署做说明。在LVS小节中我们说过并不搭建LVS环境，因此将直接使用单台Nginx构建我们的数据采集接口。以下是引用[官网]([Welcome to NGINX Wiki! | NGINX](https://www.nginx.com/resources/wiki/))对Nginx的描述
+
+> NGINX is a free, open-source, high-performance HTTP server and reverse proxy, as well as an
+> IMAP/POP3 proxy server. NGINX is known for its high performance, stability, rich feature set, simple
+> configuration, and low resource consumption.
+
+我们私用时并没有使用官方的原生Nginx，而是使用[OpenResty](https://openresty.org/cn/)，它是就Nginx和LuaJit开发的开源软件，可以让我们在Nginx中直接嵌入Lua代码，使我们可以更加灵活的操控数据。对于Lua在本届中，我们也不会单独讲解，在后面搭建环境时，你可以从代码中看到Lua在其中起到的作用就足够了。
+
+OpenResty安装（**实操**）
+
+> 使用的是4C8G的虚拟机7.6版本
+
+1. 选择yum安装方式，yum默认会安装openresty源的最新版本，当前版本是1.15.8.3
+
+   ~~~powershell
+   sudo yum install -y yum-utils
+   # 添加openresty yum 源
+   sudo yum-config-manager --add-repo https://openresty.org/package/centos/openresty.repo
+   # 安装openresty
+   sudo yum install -y openresty
+   ~~~
+
+   > 使用open+tab键看是否补全，或`whereis openresty`查看是否安装到/usr/bin/下。
+   >
+   > 如果是root用户，可以不用sudo，如果非root用户且具有sudo权限，并准备用root权限创建应用，就用sudo。如果责备用个人用户创建，请确保具有相关目录的权限，这里我们使用sudo的权限。
+
+2. yum方式安装后，安装目录在/usr/local/openresty 同时可执行文件在/usr/bin/openresty, 它只是一个软链接如果你的/usr/bin 目录不在系统PATH中，是无法直接执行 openresty 命令的。你需要把/usr/bin 添加到系统环境变量PATH中，[关于OpenResty RPM包的更多介绍](https://openresty.org/cn/rpm-packages.html)，如果指定安装也是可以的，查看源中可用的版本，之后指定一个版本安装即可，这里我们使用默认最新版本
+
+   ~~~shell
+   # 查看可用版本
+   sudo yum list openresty --showduplicates
+   ~~~
+
+   
+
+3. 为我们的采集服务创建一个OpenResty应用，其实就是创建一个目录，应用相关配置文件都放在这个目录里，方便管理。
+
+   ~~~shell
+   # 创建相关目录
+   sudo mkdir -p /opt/app/collect-app/
+   sudo mkdir -p /opt/app/collect-app/conf/
+   sudo mkdir -p /opt/app/collect-app/logs/
+   sudo mkdir -p /opt/app/collect-app/conf/vhost/
+   sudo cp /usr/local/openresty/nginx/conf/mime.types /opt/app/collect-app/conf/
+   ~~~
+
+   
+
+4. 编写nginx配置文件，命名为nginx.conf，放到/opt/app/collect-app/conf/ 目录下
+
+   ~~~shell
+   # nginx.conf
+   # nginx 用户和组
+   user root root;
+   # work进程数
+   worker_processes 4;
+   # 错误日志路径和日志级别
+   error_log logs/nginx_error.log error;
+   # nginx pid文件
+   pid logs/nginx.pid;
+   # 单个worker最大打开的文件描述符个数
+   worker_rlimit_nofile 65535;
+   events
+   {
+     # 使用epoll模型
+     use epoll;
+     # 单个worker进程允许的最多连接数
+     worker_connections 65535;
+   }
+   http
+   {
+     include mime.types;
+     default_type application/octet-stream;
+     gzip on;
+     gzip_min_length 1k;
+     gzip_buffers 4 16k;
+     gzip_http_version 1.0;
+     gzip_comp_level 2;
+     gzip_types text/plain application/x-javascript text/css application/xml;
+     gzip_vary on;
+     underscores_in_headers on;
+     log_format main
+       '$remote_addr - $remote_user [$time_local] '
+       '$request_length '
+       '"$request" $status $bytes_sent $body_bytes_sent '
+       '"$http_referer" "$http_user_agent" '
+       '"$gzip_ratio" "$request_time" '
+       '"$upstream_addr" "$upstream_status" "$upstream_response_time"';
+     # 定义我们数据采集的access日志个数
+     log_format collect-app '$cad';
+     open_log_file_cache max=1000 inactive=60s;
+     keepalive_timeout 0;
+     client_max_body_size 20m;
+     include /opt/app/collect-app/conf/vhost/*.conf;
+   }
+   ~~~
+
+   
+
+5. 编写我们的APP的nginx配置，命名为collect-app.conf，放到/opt/app/collect-app/conf/vhost/下。这里说明一下，企业工程中我们一般会把多个应用配置和nginx主配置文件分开，然后在主配置文件中通过include命令包含我们的应用配置，在上方配置最后一行你可以看到include命令。这样做的目的是方便我们管理配置。
+
+   ~~~shell
+   #collect-app.conf
+   server {
+   	listen 8802 default_server;
+   	# lua_need_request_body on;
+   	client_max_body_size 5M;
+   	client_body_buffer_size 5M;
+   	location /data/v1 {
+   		set $cad '';
+   		content_by_lua_block {
+   ࣘ		-- cjson模块 
+   		local cjson = require "cjson"
+   		-- 读取请求体信息 
+   		ngx.req.read_body()
+   		-- 请求体信息存放到 body_data变量中
+   		local body_data = ngx.req.get_body_data()
+   		-- 如果请求体为空，返回错误
+   		if body_data == nil then
+   		  ngx.say([[{"code":500,"msg":"req body nil"}]])
+   		  return
+   		end
+   		-- 定义当前时间
+   		local current_time = ngx.now()*1000
+   		-- 请求的URL project参数中获取其值
+   		local project = ngx.var.arg_project
+   		-- 定义一个字典，存放有当前服务为日志增加的信息，如ctime表示接受到请求的事件，ip地址等
+   		local data={}
+   		data["project"] = project
+   		data["ctime"] = current_time
+   		if ngx.var.http_x_forwarded_for == nil then
+   		  data["ip"] = ngx.var.remote_addr;
+   		else
+   		  data["ip"] = ngx.var.http_x_forwarded_for
+   		end
+   		-- 将增加的信息编码为json
+   		local meta = cjson.encode(data)
+   		-- 将编码的json信息做base64 和 body_data拼接
+   		local res = ngx.encode_base64(meta) .. "-" .. ngx.unescape_uri(body_data)
+   		-- 将数据赋值给我们定义的nginx变量cad中，定义的log_format就使用这个变量的值
+   		ngx.var.cad = res
+   		ngx.say([[{"code":200,"msg":"ok"}]])
+   	}
+   	  access_log logs/collect-app.access.log collect-app;
+     }
+   }
+   
+   ~~~
+
+   
+
+6. 
