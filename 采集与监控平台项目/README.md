@@ -187,16 +187,82 @@
 
 ![1642563394249](assets/1642563394249.png)
 
-前面讲到，新闻资讯服务端先拉专门数据公司的数据，再通过推的方式给我们，我们可以通过`Flume Http Source`提供HTTP接口给服务端，让他们把数据推给我们，之后直接投递到hdfs上。我们的业务数据在MySQL中，只收集广告数据表中的数据，这个数据通过Sqoop或者DataX也可以直接收集，相关MySQL连接信息后面会给出。
+前面讲到，新闻资讯服务端先拉专门数据公司的数据，再通过推的方式给我们，我们可以通过`Flume Http Source`提供HTTP接口给服务端，让他们把数据推给我们，之后直接投递到hdfs上。我们的业务数据在MySQL（RDB关系型数据库）中，只收集广告数据表中的数据，这个数据通过Sqoop或者DataX也可以直接收集，相关MySQL连接信息后面会给出。
 
 ##### 1.3.3. 元数据&调度
 
 ![1642564130136](assets/1642564130136.png)
 
-从图中可以看出，我们的数据经过`Flume、Sqoop`发送到hdfs，通过Azkaban调度简历HIVE分区表，注意此表中是json数据，再调度一个json数据转换的宽表，之后我们会有一个MR根据`元数`据信息和我们的数据信息结合做一个数据校验控制。
+从图中可以看出，我们的数据经过`Flume、Sqoop`发送到hdfs，通过Azkaban调度建立HIVE分区表，注意此表中是json数据，再调度一个json数据转换的宽表，之后我们会有一个MR根据`元数`据信息和我们的数据信息结合做一个数据校验控制。
 
 > 元数据（Metadata）：又称中介数据、中继数据，为描述数据的数据（data about data），主要是描述数据属性（property）的信息，用来支持如指示存储位置、历史数据、资源查找、文件记录等功能。
 >
 > 这里可以简单理解为对于我们埋点数据json中的字段进行管理，如json中有哪些字段，字段都是什么类型等。实际开发过程中，每埋一个点，都需要在埋点数据管理平台（上图中的web），提交一个申请，比如我要增加一个点击新闻的埋点，这个埋点需要添加什么字段，是什么类型等都要写清楚，经过审核后，客户端伙伴才会开发埋点。这样我们上报的json数据才会有这个字段。
 >
 > 不用关注埋点数据管理平台如何实现，了解其作用即可。
+
+这样通过元数据和我们上报的数据可以做一个检验，过滤掉客户端再实际操作过程中出现的错误数据，同时对于埋点，我们通过和元数据结合，也可以做到快速下线数据。在本项目中，我们会把元数据也同步到HIVE表，通过SQL Join的方式去做数据校验，而不是写MR。DophonScheduler也是作业流调度系统。
+
+### 四.部署实施
+
+#### 4.1. 数据格式
+
+##### 4.1.1. 行为数据格式
+
+之前我们说过，对于用户行为数据的Scheme我们是有埋点平台的，通过元数据管理控制，在这里我们为了简化，不再去开发元数据管理的WEB平台，而是直接给出元数据的表结构信息，这个表在MySQL中。我们已经通过埋点的数据结构，只要开发好HTTP接口，将客户端上报数据的地址，指向开发好的HTTP接口地址，就可以实时收到用户行为数据。
+
+- 配置客户端上报数据的地址，这里的地址就是开发好的HTPP接口地址，使用方式如下
+
+  ~~~json
+  # 例如开发好HTTP接口地址为 http://xxx.xxx.xxx/data/v1，需要执行如下命令，将开发好的地址配置到管理中心，只要有数据就发送到接口中，可以在request_body中获取到发送的base64编码数据，在后面的部署中会详细说明
+  curl -X POST \
+   http://meta.frp.qfbigdata.com:8112/ \
+   -F data_url=http://xxx.xxx.xxx/data/v1
+  ~~~
+
+  
+
+- 上报数据格式
+
+  ~~~json
+  # 原始base64
+  eyJjb25ldG50Ijp7ImRpc3RpbmN0X2lkIjoiNjkyNDA3MiIsInByb3BlcnRpZXMiOnsibW9kZWwiOiJIUlk
+  tQUwwMGEiLCJuZXR3b3JrX3R5cGUiOiJXSUZJIiwiaXNfY2hhcmdpbmciOiIyIiwiYXBwX3ZlcnNpb24iOi
+  I0LjQuNSIsImVsZW1lbnRfbmFtZSI6IuaIkeeahOmSseWMhemhtSIsImVsZW1lbnRfcGFnZSI6Iummlumht
+  SIsImNhcnJpZXIiOiLkuK3lm73np7vliqgiLCJvcyI6ImFuZHJvaWQiLCJpbWVpIjoiOTM4ZDczMWY0MTg3
+  NGRhMCIsImJhdHRlcnlfbGV2ZWwiOiI2OSIsInNjcmVlbl93aWR0aCI6IjEwODAiLCJkZXZpY2VfaWQiOiJ
+  lZDcxZDdkZi0yZjVjLTY2ZDMtY2JmYi01M2Y1NWJjNzg5OTkiLCJjbGllbnRfdGltZSI6IjIwMjAtMDQtMj
+  UwNzo1OTo1MCIsImlwIjoiMTIxLjU2Ljc5LjQiLCJ3aWZpIjoiMSIsIm1hbnVmYWN0dXJlciI6IkhVQVdFS
+  SIsInNjcmVlbl9oZWlnaHQiOiIyMzQwIn0sImV2ZW50IjoiQXBwQ2xpY2sifSwicHJvamVjdCI6Im5ld3Mi
+  LCJjdGltZSI6IjE1ODc3NzU3NDUifQo=
+  
+  # decode之后的json
+  {
+    "conetnt": {
+      "distinct_id": "6924072",  # 用户ID
+      "properties": {
+        "model": "HRY-AL00a",  # 机型
+        "network_type": "WIFI",  # 用户网络类型
+        "is_charging": "2",  # 是否充电中
+        "app_version": "4.4.5",  # app版本
+        "element_name": "我的钱包页",  # 元素名称
+        "element_page": "首页",  # 元素所在页面
+        "carrier": "中国移动",  # 运营商
+        "os": "android",  # 操作系统
+        "imei": "938d731f41874da0",  # 手机IMEI号
+        "battery_level": "69",  # 手机电量
+        "screen_width": "1080",  # 屏幕宽度
+        "device_id": "ed71d7df-2f5c-66d3-cbfb-53f55bc78999",  # 设备ID
+        "client_time": "2020-04-25 07:59:50",  # 客户端上报此条日志时间
+        "ip": "121.56.79.4",  # 客户端IP地址
+        "manufacturer": "HUAWEI",  # 制造商
+        "screen_height": "2340",  # 屏幕高度
+        "client_time":"1587771745000"  # 客户端上报日志时间
+      },
+      "event": "AppClick"  # 事件名称
+    },
+    "project": "news",  # 产品名称
+    "ctime": "1587775745000"  # 服务器接收到日志时间
+  }
+  ~~~
+
