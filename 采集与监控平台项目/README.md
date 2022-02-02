@@ -209,7 +209,7 @@
 
 ##### 4.1.1. 行为数据格式
 
-之前我们说过，对于用户行为数据的Scheme我们是有埋点平台的，通过元数据管理控制，在这里我们为了简化，不再去开发元数据管理的WEB平台，而是直接给出元数据的表结构信息，这个表在MySQL中。我们已经通过埋点的数据结构，只要开发好HTTP接口，将客户端上报数据的地址，指向开发好的HTTP接口地址，就可以实时收到用户行为数据。
+之前我们说过，对于用户行为数据的Scheme我们是有埋点平台的，通过元数据管理控制，在这里我们为了简化，不再去开发元数据管理的WEB平台，而是直接给出元数据的表结构信息，这个表在MySQL中。我们通过已经埋过的点的数据结构，只要开发好HTTP接口，将客户端上报数据的地址，指向开发好的HTTP接口地址，就可以实时收到用户行为数据。
 
 - 配置客户端上报数据的地址，这里的地址就是开发好的HTPP接口地址，使用方式如下
 
@@ -266,3 +266,34 @@
   }
   ~~~
 
+##### 4.1.2. 业务数据格式
+
+业务数据在MySQL中共两张表，一张是行为数据的元数据表，一张表是广告信息表，结构信息如下
+
+~~~json
+-- 元信息表，已经过简化
+CREATE TABLE `meta` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID，主键',
+  `field` varchar(50) NOT NULL DEFAULT '' COMMENT '字段名称',
+  `filed_type` varchar(20) NOT NULL DEFAULT '' COMMENT '字段类型',
+  `field_desc` varchar(255) DEFAULT NULL COMMENT '字段说明',
+  `app_version` varchar(10) NOT NULL DEFAULT '' COMMENT '上线版本号',
+  `status` tinyint(4) DEFAULT '0' COMMENT '字段状态，0 下线 1 上线',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+ PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
+-- 广告信息表，已经过简化
+CREATE TABLE `ad_info` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID，主键',
+  `ad_id` int(11) DEFAULT NULL COMMENT '广告ID',
+  `advertiser_id` int(11) DEFAULT NULL COMMENT '广告商ID，一个广告商会投放多个广告'，
+  `advertiser_name` varchar(255) DEFAULT NULL COMMENT '广告商名称',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+ PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+~~~
+
+##### 4.1.3. 新闻资讯数据格式
