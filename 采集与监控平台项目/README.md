@@ -213,11 +213,11 @@
 
 - 配置客户端上报数据的地址，这里的地址就是开发好的HTPP接口地址，使用方式如下
 
-  ~~~json
-  # 例如开发好HTTP接口地址为 http://xxx.xxx.xxx/data/v1，需要执行如下命令，将开发好的地址配置到管理中心，只要有数据就发送到接口中，可以在request_body中获取到发送的base64编码数据，在后面的部署中会详细说明
+  ~~~shell
+  # 例如我们开发好HTTP接口地址为 http://xxx.xxx.xxx/data/v1, 我们需要执行如下命令，将我们开发好的地址配置到管理中心,只要有数据发送到我们的接口中，我们可以在request_body中获取到发送的base64编码数据,在后面的部署中会详细说明
   curl -X POST \
-   http://meta.frp.qfbigdata.com:8112/ \
-   -F data_url=http://xxx.xxx.xxx/data/v1
+    http://meta.frp.qfbigdata.com:8112/ \
+    -F data_url=http://xxx.xxx.xxx/data/v1
   ~~~
 
   
@@ -226,43 +226,34 @@
 
   ~~~json
   # 原始base64
-  eyJjb25ldG50Ijp7ImRpc3RpbmN0X2lkIjoiNjkyNDA3MiIsInByb3BlcnRpZXMiOnsibW9kZWwiOiJIUlk
-  tQUwwMGEiLCJuZXR3b3JrX3R5cGUiOiJXSUZJIiwiaXNfY2hhcmdpbmciOiIyIiwiYXBwX3ZlcnNpb24iOi
-  I0LjQuNSIsImVsZW1lbnRfbmFtZSI6IuaIkeeahOmSseWMhemhtSIsImVsZW1lbnRfcGFnZSI6Iummlumht
-  SIsImNhcnJpZXIiOiLkuK3lm73np7vliqgiLCJvcyI6ImFuZHJvaWQiLCJpbWVpIjoiOTM4ZDczMWY0MTg3
-  NGRhMCIsImJhdHRlcnlfbGV2ZWwiOiI2OSIsInNjcmVlbl93aWR0aCI6IjEwODAiLCJkZXZpY2VfaWQiOiJ
-  lZDcxZDdkZi0yZjVjLTY2ZDMtY2JmYi01M2Y1NWJjNzg5OTkiLCJjbGllbnRfdGltZSI6IjIwMjAtMDQtMj
-  UwNzo1OTo1MCIsImlwIjoiMTIxLjU2Ljc5LjQiLCJ3aWZpIjoiMSIsIm1hbnVmYWN0dXJlciI6IkhVQVdFS
-  SIsInNjcmVlbl9oZWlnaHQiOiIyMzQwIn0sImV2ZW50IjoiQXBwQ2xpY2sifSwicHJvamVjdCI6Im5ld3Mi
-  LCJjdGltZSI6IjE1ODc3NzU3NDUifQo=
-  
+  eyJjb25ldG50Ijp7ImRpc3RpbmN0X2lkIjoiNjkyNDA3MiIsInByb3BlcnRpZXMiOnsibW9kZWwiOiJIUlktQUwwMGEiLCJuZXR3b3JrX3R5cGUiOiJXSUZJIiwiaXNfY2hhcmdpbmciOiIyIiwiYXBwX3ZlcnNpb24iOiI0LjQuNSIsImVsZW1lbnRfbmFtZSI6IuaIkeeahOmSseWMhemhtSIsImVsZW1lbnRfcGFnZSI6IummlumhtSIsImNhcnJpZXIiOiLkuK3lm73np7vliqgiLCJvcyI6ImFuZHJvaWQiLCJpbWVpIjoiOTM4ZDczMWY0MTg3NGRhMCIsImJhdHRlcnlfbGV2ZWwiOiI2OSIsInNjcmVlbl93aWR0aCI6IjEwODAiLCJkZXZpY2VfaWQiOiJlZDcxZDdkZi0yZjVjLTY2ZDMtY2JmYi01M2Y1NWJjNzg5OTkiLCJjbGllbnRfdGltZSI6IjIwMjAtMDQtMjUwNzo1OTo1MCIsImlwIjoiMTIxLjU2Ljc5LjQiLCJ3aWZpIjoiMSIsIm1hbnVmYWN0dXJlciI6IkhVQVdFSSIsInNjcmVlbl9oZWlnaHQiOiIyMzQwIn0sImV2ZW50IjoiQXBwQ2xpY2sifSwicHJvamVjdCI6Im5ld3MiLCJjdGltZSI6IjE1ODc3NzU3NDUifQo=
   # decode之后的json
   {
-    "conetnt": {
-      "distinct_id": "6924072",  # 用户ID
-      "properties": {
-        "model": "HRY-AL00a",  # 机型
-        "network_type": "WIFI",  # 用户网络类型
-        "is_charging": "2",  # 是否充电中
-        "app_version": "4.4.5",  # app版本
-        "element_name": "我的钱包页",  # 元素名称
-        "element_page": "首页",  # 元素所在页面
-        "carrier": "中国移动",  # 运营商
-        "os": "android",  # 操作系统
-        "imei": "938d731f41874da0",  # 手机IMEI号
-        "battery_level": "69",  # 手机电量
-        "screen_width": "1080",  # 屏幕宽度
-        "device_id": "ed71d7df-2f5c-66d3-cbfb-53f55bc78999",  # 设备ID
-        "client_time": "2020-04-25 07:59:50",  # 客户端上报此条日志时间
-        "ip": "121.56.79.4",  # 客户端IP地址
-        "manufacturer": "HUAWEI",  # 制造商
-        "screen_height": "2340",  # 屏幕高度
-        "client_time":"1587771745000"  # 客户端上报日志时间
-      },
-      "event": "AppClick"  # 事件名称
-    },
-    "project": "news",  # 产品名称
-    "ctime": "1587775745000"  # 服务器接收到日志时间
+  	"conetnt": {
+  		"distinct_id": "6924072", # 用户ID
+  		"properties": {
+  			"model": "HRY-AL00a", #机型
+  			"network_type": "WIFI", #用户网络类型
+  			"is_charging": "2", #是否充电中
+  			"app_version": "4.4.5", #app版本
+  			"element_name": "我的钱包页", #元素名称
+  			"element_page": "首页", #元素所在页面
+  			"carrier": "中国移动", #运营商
+  			"os": "android", #操作系统
+  			"imei": "938d731f41874da0", #手机IMEI号
+  			"battery_level": "69", #手机电量
+  			"screen_width": "1080", #屏幕宽度
+  			"device_id": "ed71d7df-2f5c-66d3-cbfb-53f55bc78999", #设备ID
+  			"client_time": "2020-04-25 07:59:50",#客户端上报此条日志时间
+  			"ip": "121.56.79.4", #客户端IP地址
+  			"manufacturer": "HUAWEI", #制造商
+  			"screen_height": "2340", #屏幕高度
+        "client_time":"1587771745000" # 客户端上报日志时间
+  		},
+  		"event": "AppClick" # 事件名称
+  	},
+  	"project": "news", #产品名称
+  	"ctime": "1587775745000" #服务器接收到日志时间
   }
   ~~~
 
@@ -270,7 +261,7 @@
 
 业务数据在MySQL中共两张表，一张是行为数据的元数据表，一张表是广告信息表，结构信息如下
 
-~~~json
+~~~sql
 -- 元信息表，已经过简化
 CREATE TABLE `meta` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID，主键',
@@ -281,17 +272,17 @@ CREATE TABLE `meta` (
   `status` tinyint(4) DEFAULT '0' COMMENT '字段状态，0 下线 1 上线',
   `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
- PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
 -- 广告信息表，已经过简化
 CREATE TABLE `ad_info` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID，主键',
   `ad_id` int(11) DEFAULT NULL COMMENT '广告ID',
-  `advertiser_id` int(11) DEFAULT NULL COMMENT '广告商ID，一个广告商会投放多个广告'，
+  `advertiser_id` int(11) DEFAULT NULL COMMENT '广告商ID，一个广告商会投放多个广告',
   `advertiser_name` varchar(255) DEFAULT NULL COMMENT '广告商名称',
   `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
- PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 ~~~
@@ -302,18 +293,14 @@ CREATE TABLE `ad_info` (
 
 ~~~json
 {
-  "article_id": 487186016, # 文章ID，新闻的唯一标识
-  "type_name": "科技", # 新闻类型
-  "pub_time": "2020-04-20 19:45:36.919",  # 新闻发布时间
-  "title": "小米10pro 30w无线充电对比华为40w有线充电", # 新闻标题
-  "content": "<p>之前做了一个小米10pro 30w无线充电对比华为40w有线充电，米10pro无线充电只需要55分钟。这次oppoACE2，看了其他媒体测试的40w快充，前半小时还比不上米10pro，总时间才快了5分钟，然而一个40w，一个30w，一个4000毫安，一个4500毫安。。。这40w真的阳痿</p><p>
-<img 
-src=\"http://fwimage.cnfanews.com/websiteimg/2020/20200421/29002919/ 
-2013b7e.jpg\" style=\"max-width:600px;\"></p>", # 新闻内容html格式
-  "source_name": "今日头条移动端-数码", # 新闻来源
-  "tags": "pro,充电,小时,测试,充满,比不上,需要" # ٖ内容标签
+	"article_id": 487186016, # 文章ID，新闻的唯一标识
+	"type_name": " 科技", #新闻类型
+	"pub_time": "2020-04-20 19:45:36.919", # 新闻发布时间
+	"title": "小米10pro 30w无线充电对比华为40w有线充电", # 新闻标题
+	"content": "<p>之前做了一个小米10pro 30w无线充电对比华为40w有线充电，米10pro无线充电充满只需要55分钟。							这次oppoACE2，看了其他媒体测试的40w快充，前半小时还比不上米10pro，总时间才快了5分钟。然而一							个40w，一个30w，一个4000毫安，一个4500毫安。。。这40w真的阳痿</p><p><img 							      							src=\"http://fwimage.cnfanews.com/websiteimg/2020/20200421/29002919/												2013b7e.jpg\" style=\"max-width:600px;\"></p>", # 新闻内容html格式
+	"source_name": "今日头条移动端-数码", # 新闻来源
+	"tags": "pro,充电,小时,测试,充满,比不上,需要" # 内容标签
 }
-
 ~~~
 
 #### 4.2. 采集架构实施
@@ -340,9 +327,9 @@ OpenResty安装（**实操**）
 
 > 使用的是4C8G的虚拟机7.6版本
 
-1. 选择yum安装方式，yum默认会安装openresty源的最新版本，当前版本是1.15.8.3
+1. 选择yum安装方式，yum默认会安装openresty源的最新版本，当前版本是1.19.9.1
 
-   ~~~powershell
+   ~~~shell
    sudo yum install -y yum-utils
    # 添加openresty yum 源
    sudo yum-config-manager --add-repo https://openresty.org/package/centos/openresty.repo
@@ -352,13 +339,15 @@ OpenResty安装（**实操**）
 
    > 使用open+tab键看是否补全，或`whereis openresty`查看是否安装到/usr/bin/下。
    >
+   > ![1643860152216](assets/1643860152216.png)
+   >
    > 如果是root用户，可以不用sudo，如果非root用户且具有sudo权限，并准备用root权限创建应用，就用sudo。如果责备用个人用户创建，请确保具有相关目录的权限，这里我们使用sudo的权限。
 
 2. yum方式安装后，安装目录在/usr/local/openresty 同时可执行文件在/usr/bin/openresty, 它只是一个软链接如果你的/usr/bin 目录不在系统PATH中，是无法直接执行 openresty 命令的。你需要把/usr/bin 添加到系统环境变量PATH中，[关于OpenResty RPM包的更多介绍](https://openresty.org/cn/rpm-packages.html)，如果指定安装也是可以的，查看源中可用的版本，之后指定一个版本安装即可，这里我们使用默认最新版本
 
    ~~~shell
    # 查看可用版本
-   sudo yum list openresty --showduplicates
+   sudo yum list openresty --showduplicates 
    ~~~
 
    
@@ -381,47 +370,47 @@ OpenResty安装（**实操**）
    ~~~shell
    # nginx.conf
    # nginx 用户和组
-   user root root;
-   # work进程数
+   user    root root;
+   # work进程数，
    worker_processes 4;
-   # 错误日志路径和日志级别
+   # 错误日志路径，和日志级别
    error_log logs/nginx_error.log error;
    # nginx pid文件
-   pid logs/nginx.pid;
+   pid       logs/nginx.pid;
    # 单个worker最大打开的文件描述符个数
    worker_rlimit_nofile 65535;
    events
    {
-     # 使用epoll模型
-     use epoll;
-     # 单个worker进程允许的最多连接数
-     worker_connections 65535;
+   	#使用epoll模型
+   	use epoll;
+   	# 单个worker进程允许的最多连接数
+   	worker_connections 65535;
    }
    http
    {
-     include mime.types;
-     default_type application/octet-stream;
-     gzip on;
-     gzip_min_length 1k;
-     gzip_buffers 4 16k;
-     gzip_http_version 1.0;
-     gzip_comp_level 2;
-     gzip_types text/plain application/x-javascript text/css application/xml;
-     gzip_vary on;
-     underscores_in_headers on;
-     log_format main
-       '$remote_addr - $remote_user [$time_local] '
-       '$request_length '
-       '"$request" $status $bytes_sent $body_bytes_sent '
-       '"$http_referer" "$http_user_agent" '
-       '"$gzip_ratio" "$request_time" '
-       '"$upstream_addr" "$upstream_status" "$upstream_response_time"';
-     # 定义我们数据采集的access日志个数
-     log_format collect-app '$cad';
-     open_log_file_cache max=1000 inactive=60s;
-     keepalive_timeout 0;
-     client_max_body_size 20m;
-     include /opt/app/collect-app/conf/vhost/*.conf;
+   	include mime.types;
+   	default_type application/octet-stream;
+   	gzip on;
+   	gzip_min_length 1k;
+   	gzip_buffers 4 16k;
+   	gzip_http_version 1.0;
+   	gzip_comp_level 2;
+   	gzip_types text/plain application/x-javascript text/css application/xml;
+   	gzip_vary on;
+   	underscores_in_headers on;
+   	log_format main
+   		'$remote_addr - $remote_user [$time_local] '
+   		'$request_length '
+   		 '"$request" $status $bytes_sent $body_bytes_sent '
+   		'"$http_referer" "$http_user_agent" '
+   		'"$gzip_ratio" "$request_time" '
+   		'"$upstream_addr" "$upstream_status" "$upstream_response_time"';
+   	# 定义我们数据采集的 access 日志格式
+   	log_format collect-app '$cad';
+   	open_log_file_cache max=1000 inactive=60s;
+   	keepalive_timeout 0;
+   	client_max_body_size 20m;
+   	include /opt/app/collect-app/conf/vhost/*.conf;
    }
    ~~~
 
@@ -432,49 +421,49 @@ OpenResty安装（**实操**）
    ~~~shell
    #collect-app.conf
    server {
-   	listen 8802 default_server;
-   	# lua_need_request_body on;
-   	client_max_body_size 5M;
-   	client_body_buffer_size 5M;
-   	location /data/v1 {
-   		set $cad '';
-   		content_by_lua_block {
-   ࣘ		-- cjson模块 
-   		local cjson = require "cjson"
-   		-- 读取请求体信息 
-   		ngx.req.read_body()
-   		-- 请求体信息存放到 body_data变量中
-   		local body_data = ngx.req.get_body_data()
-   		-- 如果请求体为空，返回错误
-   		if body_data == nil then
-   		  ngx.say([[{"code":500,"msg":"req body nil"}]])
-   		  return
-   		end
-   		-- 定义当前时间
-   		local current_time = ngx.now()*1000
-   		-- 请求的URL project参数中获取其值
-   		local project = ngx.var.arg_project
-   		-- 定义一个字典，存放有当前服务为日志增加的信息，如ctime表示接受到请求的事件，ip地址等
-   		local data={}
-   		data["project"] = project
-   		data["ctime"] = current_time
-   		if ngx.var.http_x_forwarded_for == nil then
-   		  data["ip"] = ngx.var.remote_addr;
-   		else
-   		  data["ip"] = ngx.var.http_x_forwarded_for
-   		end
-   		-- 将增加的信息编码为json
-   		local meta = cjson.encode(data)
-   		-- 将编码的json信息做base64 和 body_data拼接
-   		local res = ngx.encode_base64(meta) .. "-" .. ngx.unescape_uri(body_data)
-   		-- 将数据赋值给我们定义的nginx变量cad中，定义的log_format就使用这个变量的值
-   		ngx.var.cad = res
-   		ngx.say([[{"code":200,"msg":"ok"}]])
-   	}
-   	  access_log logs/collect-app.access.log collect-app;
-     }
-   }
+         listen  8802 default_server;
    
+         # lua_need_request_body on;
+         client_max_body_size 5M;
+         client_body_buffer_size 5M;
+         location /data/v1 {
+             set $cad '';
+       			content_by_lua_block {
+                 -- cjson模块
+                 local cjson = require "cjson"
+                 -- 读取请求体信息
+                 ngx.req.read_body()
+                 -- 请求体信息存放到 body_data变量中
+                 local body_data = ngx.req.get_body_data()
+                 -- 如果请求体为空，返回错误
+                 if body_data == nil  then
+                   ngx.say([[{"code":500,"msg":"req body nil"}]])
+                   return 
+                 end
+                 -- 定义当前时间
+                 local current_time = ngx.now()*1000
+                 -- 请求的URL project参数中获取其值
+                 local project = ngx.var.arg_project
+                 -- 定义一个字典，存放有当前服务为日志增加的信息，如ctime表示接受到请求的时间，ip地址等
+                 local data={}
+                 data["project"] = project
+                 data["ctime"] = current_time
+                 if ngx.var.http_x_forwarded_for == nil then
+                   data["ip"] = ngx.var.remote_addr;
+                 else
+                   data["ip"] = ngx.var.http_x_forwarded_for
+                 end
+                 -- 将增加的信息编码为json
+                 local meta = cjson.encode(data)
+                 -- 将编码的json信息做base64 和 body_data拼接
+                 local res = ngx.encode_base64(meta) .. "-" .. ngx.unescape_uri(body_data)
+                 -- 将数据赋值给我们定义的nginx变量cad中，我们定义的log_format就使用这个变量的值
+                 ngx.var.cad = res 
+                 ngx.say([[{"code":200,"msg":"ok"}]])
+      			}
+             access_log  logs/collect-app.access.log  collect-app;
+         }
+   }
    ~~~
 
    > 上面的`ccess_log logs/collect-app.access.log collect-app`指定的是相对位置，等下我们再处理
@@ -486,7 +475,7 @@ OpenResty安装（**实操**）
    sudo openresty -p /opt/app/collect-app/ -t
    # 后台启动
    sudo openresty -p /opt/app/collect-app/
-   # 如果没有任何输出，代表已成果启动nginx，后面讲解报警服务时，会用supervisor来管理nginx服务。
+   #如果没有任何输出，代表我们已经成功启动nginx，后面讲解报警服务时，我们会用supervisor来管理nginx服务。
    # 执行下面命令，可以查看到我们的nginx的进程
    ps axu|grep nginx|grep -v grep
    # 也可以通过我们监听的端口号查看到nginx master
@@ -497,10 +486,80 @@ OpenResty安装（**实操**）
 
 7. Nginx启动后，安装我们的配置，已经在`8802`端口监听请求了，我们数据服务配置的路径是/data/v1，同时我们会解析请求中url的参数project的参数值。接下来我们就测试一下我们接口是否能正常接收数据。我们再来认识一下我们的接口。首先，我们的服务监听`8802`端口，请求的路径是/data/v1，如果客户端有数据请求过来，我们会解析HTTP请求`request_body`中的数据，接收到数据之后和我们自己定义的数据做拼接，日志写入到`collect-app.access.log`文件中，返回给客户端`{"code":200,"msg":"ok"}`。如果一个客户请求的`request_body`为空，我们将在日志中记录空行，返回客户端`{"code":500,"msg":"req body nil"}`。我们接下来通过测试验证我们的接口是否正常。
 
-   ~~~
+   ~~~shell
+   # 发送一个带request_body的请求，值可以是任意值。 project参数的值，我们定成news，因为我们是新闻的行为数据
+   curl localhost:8802/data/v1?project=news -d test_data
+   # > return: {"code":200,"msg":"ok"}
    
+   # 查看我们记录到的日志
+   tail -n 1 /opt/app/collect-app/logs/collect-app.access.log
+   # > return: eyJpcCI6IjEyNy4wLjAuMSIsImN0aW1lIjoxNTg3ODkzODk3MTg2fQ==-test_data 
+   #可以看到我们的数据通过我们定义的"-"做了分隔，第一部分是我们base64后的自定义信息，每个人看到的可能是不一样的，第二部分是刚才HTTP请求体的数据test_data
+   
+   # 我们之前说过客户端发过来的数据也是做了base64的，我们也模拟一下
+   echo "test_data"|base64 |xargs -I {} curl localhost:8802/data/v1?project=news -d {}
+   # > return: {"code":200,"msg":"ok"}
+   tail -n 1 /opt/app/collect-app/logs/collect-app.access.log
+   # > return: eyJwcm9qZWN0IjoibmV3cyIsImlwIjoiMTI3LjAuMC4xIiwiY3RpbWUiOjE1ODc4OTUwOTkyODJ9-dGVzdF9kYXRhCg==
+   
+   # 可以看到，我们得到了两部分base64数据，他们中间依然以"-"分隔，我们解析出来这两部分数据，验证结果
+   # 第一部分
+   echo "eyJwcm9qZWN0IjoibmV3cyIsImlwIjoiMTI3LjAuMC4xIiwiY3RpbWUiOjE1ODc4OTUwOTkyODJ9"|base64 -d
+   # > return:  {"project":"news","ip":"127.0.0.1","ctime":1587895099282}
+   # 可以看到，解出来的是我们在nginx lua中自定义的json信息。
+   # 第二部分
+   echo "dGVzdF9kYXRhCg=="|base64 -d
+   # > return test_data
+   # 可以看到解析出来是我们的reqest_body中的数据
+   
+   # 我们再发送一个不带 request_body 的数据
+   curl localhost:8802/data/v1?project=news 
+   # > return {"code":500,"msg":"req body nil"}
+   # 可以看到，如果客户端不带请求体发送请求，我们会给客户端返回错误信息
    ~~~
 
    
 
 8. 配置接口到管理中心。经过上述步骤，我们的接口就开发完毕了。接下来需要把我们的接口配置到管理中心，这样就可以接收到真实客户端上报的数据了。但由于大家的机器是内网，所以需要先把本机的服务端口，通过内网穿透暴露公网地址，之后配置这个公网地址到管理中心，管理中心通过这个公网给你地址发送数据。这部分内容仅仅是为了让你能够实时的接收到数据，按照下面的方法执行就可以了
+
+~~~shell
+# 下载frp 客户端，这个frp是我们自己编译的，已经修改了源码中的默认地址，并做了相关优化，你下载完直接用即可
+mkdir -p  /opt/soft/frp/
+cd /opt/soft/frp/
+wget http://doc.qfbigdata.com/qf/project/soft/frp/frpc_0.33.linux_adm64.tgz 
+tar -xvzf frpc_0.33.linux_adm64.tgz
+/opt/soft/frp/frpc http --sd name -l 8802 -s frp.qfbigdata.com:7001 -u name  # 这两个name替换成自己的名字拼音就可以 8802是我们nginx配置的监听端口
+~~~
+
+
+
+~~~shell
+#运行上述命令后，会看到如上图日志
+# 只需要将我们开发的接口主机地址，替换为上述红色圈子中的http连接地址即可，比如上图：
+# 我们开发的接口地址是：localhost:8802/data/v1?project=news 
+# 替换后的地址是(注意非https) http://name.frp.frp.qfbigdata.com:8002/data/v1?project=news
+# 同样可以测试一下新地址是否正常,注意name替换为自己写的名字拼音全拼
+curl http://name.frp.qfbigdata.com:8002/data/v1?project=news -d test_data
+#> 返回结果{"code":200,"data":true}
+~~~
+
+
+
+~~~shell
+# 接下来把次地址通过命令，配置到管理中心，你只需要把下方命令中 data_url=后面的地址替换成你的地址, name参数的值换成你的名字拼音全拼
+curl -X POST \
+  http://meta.frp.qfbigdata.com:8112/api/v1/meta/register \
+  -F data_url=http://name.frp.qfbigdata.com:8002/data/v1?project=news \
+  -F type=1 \
+  -F name=name
+# 请求成功后会有如下图返回值
+~~~
+
+
+
+##### 4.2.3. Flume行为数据收集
+
+我们的日志已经实时的写入到文件了，为了能够通过Hadoop分析这些数据，我们首先要做的就是将数据投递到HDFS上。我们很容易想到Flume就是帮我们做这个事情的。我们需要思考，使用Flume时，`source channel sink`应该如何选择。
+
+1. 
+
