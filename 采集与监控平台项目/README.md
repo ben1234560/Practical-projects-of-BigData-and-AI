@@ -325,7 +325,7 @@ CREATE TABLE `ad_info` (
 
 OpenResty安装（**实操**）
 
-> 使用的是4C8G的虚拟机7.6版本
+> 使用的是4C8G的虚拟机7.6版本，我在腾讯云开的
 
 1. 选择yum安装方式，yum默认会安装openresty源的最新版本，当前版本是1.19.9.1
 
@@ -363,9 +363,15 @@ OpenResty安装（**实操**）
    sudo cp /usr/local/openresty/nginx/conf/mime.types /opt/app/collect-app/conf/
    ~~~
 
-   
+   > conf目录存储主配置文件
+   >
+   > logs存储程序运行过程中的日志，用户行为日志
+   >
+   > vhost放nginx的副配置文件
+   >
+   > ![1643860621257](assets/1643860621257.png)
 
-4. 编写nginx配置文件，命名为nginx.conf，放到/opt/app/collect-app/conf/ 目录下
+4. 编写nginx配置文件，cd到/opt/app/collect-app/conf/ 目录下，vi/vim命名nginx.conf添加如下内容
 
    ~~~shell
    # nginx.conf
@@ -416,7 +422,7 @@ OpenResty安装（**实操**）
 
    
 
-5. 编写我们的APP的nginx配置，命名为collect-app.conf，放到/opt/app/collect-app/conf/vhost/下。这里说明一下，企业工程中我们一般会把多个应用配置和nginx主配置文件分开，然后在主配置文件中通过include命令包含我们的应用配置，在上方配置最后一行你可以看到include命令。这样做的目的是方便我们管理配置。
+5. cd到/opt/app/collect-app/conf/vhost/下，编写我们的APP的nginx配置，命名为collect-app.conf。这里说明一下，企业工程中我们一般会把多个应用配置和nginx主配置文件分开，然后在主配置文件中通过include命令包含我们的应用配置，在上方配置最后一行你可以看到include命令。这样做的目的是方便我们管理配置。
 
    ~~~shell
    #collect-app.conf
@@ -466,12 +472,12 @@ OpenResty安装（**实操**）
    }
    ~~~
 
-   > 上面的`ccess_log logs/collect-app.access.log collect-app`指定的是相对位置，等下我们再处理
+   > 上面的`ccess_log logs/collect-app.access.log collect-app`指定的是相对位置，下面我们再指定前缀
 
 6. 将上述第4，5步中的配置文件，放到对应的目录下后，执行以下命令测试配置文件是否正确，并启动服务
 
    ~~~shell
-   # 测试配置文件格式是否正确
+   # 测试配置文件格式是否正确，-p指定上面需要的前缀
    sudo openresty -p /opt/app/collect-app/ -t
    # 后台启动
    sudo openresty -p /opt/app/collect-app/
@@ -482,7 +488,7 @@ OpenResty安装（**实操**）
    netstat -antp |grep 8802
    ~~~
 
-   
+   > ![1643861562371](assets/1643861562371.png)
 
 7. Nginx启动后，安装我们的配置，已经在`8802`端口监听请求了，我们数据服务配置的路径是/data/v1，同时我们会解析请求中url的参数project的参数值。接下来我们就测试一下我们接口是否能正常接收数据。我们再来认识一下我们的接口。首先，我们的服务监听`8802`端口，请求的路径是/data/v1，如果客户端有数据请求过来，我们会解析HTTP请求`request_body`中的数据，接收到数据之后和我们自己定义的数据做拼接，日志写入到`collect-app.access.log`文件中，返回给客户端`{"code":200,"msg":"ok"}`。如果一个客户请求的`request_body`为空，我们将在日志中记录空行，返回客户端`{"code":500,"msg":"req body nil"}`。我们接下来通过测试验证我们的接口是否正常。
 
@@ -493,19 +499,19 @@ OpenResty安装（**实操**）
    
    # 查看我们记录到的日志
    tail -n 1 /opt/app/collect-app/logs/collect-app.access.log
-   # > return: eyJpcCI6IjEyNy4wLjAuMSIsImN0aW1lIjoxNTg3ODkzODk3MTg2fQ==-test_data 
-   #可以看到我们的数据通过我们定义的"-"做了分隔，第一部分是我们base64后的自定义信息，每个人看到的可能是不一样的，第二部分是刚才HTTP请求体的数据test_data
+   # > return: eyJjdGltZSI6MTY0Mzg2MTc3ODg3NiwicHJvamVjdCI6Im5ld3MiLCJpcCI6IjEyNy4wLjAuMSJ9-test_data
+   #可以看到我们的数据通过我们定义的"-"做了分隔，第一部分是我们base64后的自定义信息，每个人看到的可能是不一样的，第二部分是刚才HTTP请求体的数据test_data。这些在collect-app.conf文件里local res行定义了
    
    # 我们之前说过客户端发过来的数据也是做了base64的，我们也模拟一下
    echo "test_data"|base64 |xargs -I {} curl localhost:8802/data/v1?project=news -d {}
    # > return: {"code":200,"msg":"ok"}
    tail -n 1 /opt/app/collect-app/logs/collect-app.access.log
-   # > return: eyJwcm9qZWN0IjoibmV3cyIsImlwIjoiMTI3LjAuMC4xIiwiY3RpbWUiOjE1ODc4OTUwOTkyODJ9-dGVzdF9kYXRhCg==
+   # > return: eyJjdGltZSI6MTY0Mzg2MjA0ODAwNiwicHJvamVjdCI6Im5ld3MiLCJpcCI6IjEyNy4wLjAuMSJ9-dGVzdF9kYXRhCg==
    
    # 可以看到，我们得到了两部分base64数据，他们中间依然以"-"分隔，我们解析出来这两部分数据，验证结果
    # 第一部分
-   echo "eyJwcm9qZWN0IjoibmV3cyIsImlwIjoiMTI3LjAuMC4xIiwiY3RpbWUiOjE1ODc4OTUwOTkyODJ9"|base64 -d
-   # > return:  {"project":"news","ip":"127.0.0.1","ctime":1587895099282}
+   echo "eyJjdGltZSI6MTY0Mzg2MjA0ODAwNiwicHJvamVjdCI6Im5ld3MiLCJpcCI6IjEyNy4wLjAuMSJ9"|base64 -d
+   # > return: {"ctime":1643862048006,"project":"news","ip":"127.0.0.1"}
    # 可以看到，解出来的是我们在nginx lua中自定义的json信息。
    # 第二部分
    echo "dGVzdF9kYXRhCg=="|base64 -d
@@ -518,7 +524,7 @@ OpenResty安装（**实操**）
    # 可以看到，如果客户端不带请求体发送请求，我们会给客户端返回错误信息
    ~~~
 
-   
+   > ![1643862270997](assets/1643862270997.png)
 
 8. 配置接口到管理中心。经过上述步骤，我们的接口就开发完毕了。接下来需要把我们的接口配置到管理中心，这样就可以接收到真实客户端上报的数据了。但由于大家的机器是内网，所以需要先把本机的服务端口，通过内网穿透暴露公网地址，之后配置这个公网地址到管理中心，管理中心通过这个公网给你地址发送数据。这部分内容仅仅是为了让你能够实时的接收到数据，按照下面的方法执行就可以了
 
