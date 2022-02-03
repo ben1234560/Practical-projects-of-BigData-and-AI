@@ -591,5 +591,129 @@ tail -f /opt/app/collect-app/logs/collect-app.access.log
 
 我们的日志已经实时的写入到文件了，为了能够通过Hadoop分析这些数据，我们首先要做的就是将数据投递到HDFS上。我们很容易想到Flume就是帮我们做这个事情的。我们需要思考，使用Flume时，`source channel sink`应该如何选择。
 
-1. 
+1. 首先对于`sink` 因为我们要将数据投递到HDFS上，毋庸置疑我们选择`hdfs sink`。 
+2. 对于`channel`, 我们有多种选择，如果速度是第一优先级，同时允许数据再Flume挂掉后有丢失，我们可以选择`Memory Channel`,如果不允许数据丢失，我们可以选择其他可以持久化数据的Channel，比如`File Channel，Kafka Channel` 。对于生成环境中，不同的公司根据其业务会有不同的选择，比如对于用户行为日志，偶尔的丢失数据是可以接受的，因为丢失的数据相对于总体的数据可用忽略不计，也不会因为少量的数据丢失而影响到分析结果，而数据采集的速度和性能我们是比较关注的，因此我们会选择`Memory Channel`。当然很多些企业也会选择`File Channel`，这是个仁者见仁智者见智的事情，`Kafka Channel`我们还没有学习Kakfa，这里先不提。
+3. 对于`Source`，因为我们的数据是` access `日志文件，因此我们的Source可以选择`Spooling Directory Source` 和 `Exec Source` 。 我们为什么不使用`Exec Source`,请[参看官网对其解释](https://flume.apache.org/FlumeUserGuide.html#exec-source), 我们使用Spooling Directory Source，先要对我们的access日志做切分处理。接下来我们就开始自己写脚本，切分日志。
 
+先来看一个现象，我们把名字改了
+
+![1643873695928](assets/1643873695928.png)
+
+可以看到改了名字后依然在变大，这说明nginx监控到的数据依然在往这里面放，因为nginx追踪的并不是文件名，而是inode唯一标识。即使移动文件也依然在增长。
+
+![1643873897636](assets/1643873897636.png)
+
+如果想做切分，但数据还是会往相同的inode里写入，所以还需要做一些操作，怎么让它停止对文件的追踪开发新的文件写新的日志，如下操作
+
+![1643890246493](assets/1643890246493.png)
+
+`kill -USR1 2095`kill 掉掉这个id，让nginx产生一个新的文件
+
+![1643890458958](assets/1643890458958.png)
+
+可以看到旧的abc.log不再增加
+
+> 注意，这里我重启了机器，所以文件变小了。重启机器只需要跑这两个命令即可`openresty -p /opt/app/collect-app/`，`/opt/soft/frp/frpc http --sd name -l 8802 -s frp.qfbigdata.com:7001 -u name`注意name要改成之前改的名字
+
+接下来定时执行我们的切分脚本，根据数据量级和对数据实时性的要求，选择切分周期，这里我们选择1分钟切分一次。
+
+~~~shell
+# 先创建我们切分后的数据目录
+mkdir -p /opt/app/collect-app/logs/data/
+# 建立一个目录用来存放我们以后的脚本文件
+mkdir -p /opt/scripts/
+~~~
+
+cd到/opt/scripts/下，创建split-access-log.sh脚本文件，并添加如下内容
+
+~~~shell
+#!/bin/sh
+# filename: split-access-log.sh
+# desc: 此脚本用于切割Nginx Access日志到指定的目录下，供Flume采集使用
+# date: 2020-04-28
+
+# 帮助
+usage() {
+    echo "Usage:"
+    echo "	split-access-log.sh [-f log_file] [-d data_dir] [-p pid_file]"
+    echo "Description:"
+    echo "	log_file: nginx access file absolute path"
+    echo "	data_dir: split data dir"	  
+    echo "	pid_file: nginx pid file absolute path"
+    echo "Warning: if no parmas, use default value"
+    exit -1
+}
+default(){
+	echo  "user default value:"
+	echo	"		log_file=/opt/app/collect-app/logs/collect-app.access.log"
+	echo	"		data_dir=/opt/app/collect-app/logs/data/"
+	echo	"		pid_file=/opt/app/collect-app/logs/nginx.pid"
+	# 我们的access日志文件
+	log_file="/opt/app/collect-app/logs/collect-app.access.log"
+	# 切分后文件所放置的目录
+	data_dir="/opt/app/collect-app/logs/data/"
+	# Nginx pid 文件
+	pid_file="/opt/app/collect-app/logs/nginx.pid"
+}
+
+while getopts 'f:d:p:h' OPT; do
+    case $OPT in
+        f) log_file="$OPTARG";;
+        d) data_dir="$OPTARG";;
+        p) pid_file="$OPTARG";;
+        h) usage;;
+        ?) usage;;
+        *) usage;;
+    esac
+done
+
+# 当没有参数传入时
+if [ $# -eq 0 ];then
+        default                                        
+fi
+
+# 重命名access, 注意mv 的过程日志是不会丢失的，因为nginx是以inode来表示数据文件的，而不是文件名，这里mv的操作不会改变inode
+if [ ! "${log_file}" ] || [ ! "${data_dir}" ] || [ ! ${pid_file} ]; then
+	echo "some parmas is empty，please user  "
+	exit -1
+fi
+# 切分之前，先判断日志文件是否有数据，如果有数据再切分，防止切分出来很多空文件
+line=`tail -n 1 ${log_file}`
+if [ ! "$line" ];then
+	 echo "Warning: access log file no data, do not split!"
+	 exit 0
+fi 
+mv ${log_file} ${data_dir}collect-app.access.$(date +"%s").log
+# 向nginx 发送 USR1信号，让其重新打开一个新的日志文件
+kill -USR1 `cat ${pid_file}`
+echo "finish!"
+~~~
+
+> ![1643890762076](assets/1643890762076.png)
+>
+> 测试下效果
+>
+> ~~~shell
+> sh split-access-log.sh
+> ~~~
+>
+> ![1643890899399](assets/1643890899399.png)
+>
+> 可以看到上面的红框内容已经变小，被切分到下面的红框内了。
+
+~~~shell
+# 建立一个目录用来存放我们以后的脚本执行过程中产生的日志
+mkdir -p /opt/scripts/logs
+# 写个crontab定时执行文件，一分钟切一次
+echo "*/1 * * * *  sh  /opt/scripts/split-access-log.sh >> /opt/scripts/logs/split-access-log.log 2>&1 " > /opt/scripts/collect-app-log.cron
+# 添加到定时任务，执行下面命令，linux其实是将你的定时脚本中的内容写到了 /var/spool/cron/root 文件中，这个root就是当前的用户名，因为我这边是以root执行的
+crontab /opt/scripts/collect-app-log.cron
+# 查看生成的定时任务
+crontab -l 
+# 1分钟后可以查看我们脚本的执行日志
+more /opt/scripts/logs/split-access-log.log 
+~~~
+
+> ![1643891023827](assets/1643891023827.png)
+>
+> 可以看到红框内的log已经变成0了，因为到一分钟了。
