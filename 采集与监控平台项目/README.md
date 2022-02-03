@@ -532,12 +532,19 @@ OpenResty安装（**实操**）
 # 下载frp 客户端，这个frp是我们自己编译的，已经修改了源码中的默认地址，并做了相关优化，你下载完直接用即可
 mkdir -p  /opt/soft/frp/
 cd /opt/soft/frp/
-wget http://doc.qfbigdata.com/qf/project/soft/frp/frpc_0.33.linux_adm64.tgz 
+wget https://raw.githubusercontent.com/ben1234560/Practical-projects-of-BigData-and-AI/main/soft/frpc_0.33.linux_adm64.tgz 
+# 可能需要改名
+mv frpc_0.33.linux_adm64.tgz\?raw\=true frpc_0.33.linux_adm64.tgz
+
 tar -xvzf frpc_0.33.linux_adm64.tgz
-/opt/soft/frp/frpc http --sd name -l 8802 -s frp.qfbigdata.com:7001 -u name  # 这两个name替换成自己的名字拼音就可以 8802是我们nginx配置的监听端口
+/opt/soft/frp/frpc http --sd name -l 8802 -s frp.qfbigdata.com:7001 -u name  # 这两个name替换成自己的名字拼音就可以 8802是我们nginx配置的监听端口，注意，name一定要改
 ~~~
 
-
+> ![1643866651880](assets/1643866651880.png)
+>
+> ![1643869444450](assets/1643869444450.png)
+>
+> 这个打开后不能停，不小心停了再打开
 
 ~~~shell
 #运行上述命令后，会看到如上图日志
@@ -549,10 +556,12 @@ curl http://name.frp.qfbigdata.com:8002/data/v1?project=news -d test_data
 #> 返回结果{"code":200,"data":true}
 ~~~
 
-
+> 新打开一个窗口
+>
+> ![1643869498980](assets/1643869498980.png)
 
 ~~~shell
-# 接下来把次地址通过命令，配置到管理中心，你只需要把下方命令中 data_url=后面的地址替换成你的地址, name参数的值换成你的名字拼音全拼
+# 接下来把次地址通过命令，配置到管理中心，你只需要把下方命令中 data_url=后面的地址替换成你的地址, name参数的值换成刚刚改的名字
 curl -X POST \
   http://meta.frp.qfbigdata.com:8112/api/v1/meta/register \
   -F data_url=http://name.frp.qfbigdata.com:8002/data/v1?project=news \
@@ -561,7 +570,22 @@ curl -X POST \
 # 请求成功后会有如下图返回值
 ~~~
 
+> ![1643869508047](assets/1643869508047.png)
+>
+> 这时候内网穿透已经完成了
 
+~~~shell
+# 如果一切OK，可以去看我们的access日志了，会发现数据正在实时写入到日志文件
+tail -f /opt/app/collect-app/logs/collect-app.access.log
+
+# 最后注意，你的frp启动后，如果想要一直接收数据，是不能停止的，一旦停止，就接收不到数据了，再启动就又可以接收到了
+~~~
+
+> 文件一直在增大
+>
+> ![1643870788661](assets/1643870788661.png)
+>
+> [数据管理中心代码](http://qianfeng.qfjava.cn:8087/bigdata/dmc), 这个是GoLang开发的，有兴趣可以看一下
 
 ##### 4.2.3. Flume行为数据收集
 
