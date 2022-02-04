@@ -717,3 +717,87 @@ more /opt/scripts/logs/split-access-log.log
 > ![1643891023827](assets/1643891023827.png)
 >
 > 可以看到红框内的log已经变成0了，因为到一分钟了。
+
+至此我们切分日志的工作就做完了，接下来我们要做就是编写Flume的配置文件，将数据投递到HDFS上了，根据我们前文对于`Source，Channel，Sink` 的选择，在/opt/scripts/下创建collect-app-agent.conf，并添加配置内容
+
+~~~shell
+# filename: collect-app-agent.conf
+# 定义一个名字为 a1001 的agent
+# 定义channel
+a1001.channels = ch-1
+# 定义source
+a1001.sources = src-1
+# 定义sink
+a1001.sinks = k1
+
+# sink 接到 channel 上
+a1001.sinks.k1.channel = ch-1
+# source 接到 channel 上
+a1001.sources.src-1.channels = ch-1
+a1001.sources.src-1.type = spooldir
+# 数据文件目录
+a1001.sources.src-1.spoolDir = /opt/app/collect-app/logs/data/
+# 正则匹配我们需要的数据文件
+a1001.sources.src-1.includePattern = ^collect-app.*.log
+# 如果想在header信息中加入你传输的文件的文件名，设置下面参数为true，同时设置文件header的key，我们这里设置成fileName，之后你就可以在sink端通过  %{fileName}， 取出header中的fileName变量中的值，这个值就是文件名
+# a1001.sources.src-1.basenameHeader = true
+# a1001.sources.src-1.basenameHeaderKey = fileName
+
+# 积累多少个event后，一起发到channel， 这个值在生成环境中我们需要根据数据量配置batchSize大的下，通常来讲们的batchSize越大，吞吐就高，但是也要受到 channel 的capacity，transactionCapacity的限制,不能大于channel的transactionCapacity值。 关于这三个参数的区别及说明参看 [官方wiki](https://cwiki.apache.org/confluence/display/FLUME/BatchSize%2C+ChannelCapacity+and+ChannelTransactionCapacity+Properties)
+a1001.sources.src-1.batchSize = 100
+
+a1001.sinks.k1.type = hdfs
+a1001.sinks.k1.hdfs.path = hdfs://qianfeng01:8020/sources/news/%Y%m%d
+a1001.sinks.k1.hdfs.filePrefix = news-%Y%m%d_%H
+a1001.sinks.k1.hdfs.fileSuffix = .gz
+a1001.sinks.k1.hdfs.codeC = gzip
+a1001.sinks.k1.hdfs.useLocalTimeStamp = true
+a1001.sinks.k1.hdfs.writeFormat = Text
+a1001.sinks.k1.hdfs.fileType = CompressedStream
+# 禁用安装event条数来滚动生成文件
+a1001.sinks.k1.hdfs.rollCount = 0
+# 如果一个文件达到10M滚动
+a1001.sinks.k1.hdfs.rollSize = 10485760
+# 5分钟滚动生成新文件，和文件大小的滚动一起，那个先达到，执行那个
+a1001.sinks.k1.hdfs.rollInterval = 600
+# 参加上边连接官网说明，理论上batchSize 越大，吞吐越高。 但是HDFS Sink 调用 Hadoop RPC（包括 open、flush、close ..）超时会抛出异常，如果发生在 flush 数据阶段，部分 event 可能已写入 HDFS，事务回滚后当前 BatchSize 的 event 还会再次写入造成数据重复。 batchSize越大可能重复的数据就越多. 同时batchSize值，不能大于channel的transactionCapacity值
+a1001.sinks.k1.hdfs.batchSize = 100
+# 每个HDFS SINK 开启多少线程来写文件
+a1001.sinks.k1.hdfs.threadsPoolSize = 10
+# 如果一个文件超过多长时间没有写入，就自动关闭文件，时间单位是秒
+a1001.sinks.k1.hdfs.idleTimeout = 60
+
+a1001.channels.ch-1.type = memory
+a1001.channels.ch-1.capacity = 10000
+a1001.channels.ch-1.transactionCapacity = 100
+~~~
+
+编写一个脚本启动Flume Agent 开始采集数据，在/opt/scripts/下创建start-flume-agent.sh
+
+~~~shell
+#!/bin/sh
+# filename: start-flume-agent.sh
+# desc: 启动采集数据的flume agent,agent 名字为 a1001
+# date: 2020-04-28
+# 请写你安装的FLUME的路径
+FLUME_HOME=/opt/local/flume
+
+${FLUME_HOME}/bin/flume-ng agent -c ${FLUME_HOME}/conf -f /opt/scripts/conf/collect-app-agent.conf -n a1001 -Dflume.root.logger=INFO,console -Dflume.monitoring.type=http -Dflume.monitoring.port=31001
+~~~
+
+启动
+
+~~~shell
+# 依然把你的脚本放到你之前创建的 /opt/scripts/ 目录下
+# 直接执行，程序运行在前台
+sh /opt/scripts/start-flume-agent.sh 
+# 可以后台执行
+nohup sh /opt/scripts/start-flume-agent.sh  >> /opt/scripts/a1001-flume-agent.log 2>&1 &
+# 终止进程
+ps axu|grep flume|grep collect-app-agent.conf|gawk '{print $2}'|xargs -n1 kill -15
+~~~
+
+
+
+
+
