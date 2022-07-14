@@ -85,8 +85,26 @@ Hadoop3.0新扩展的两个模块：
 
 #### 1.6 Hadoop的生态系统
 
-2.0时代
+2.0
 
 ![1657767090189](assets/1657767090189.png)
 
 > 在3.0版本中，除了性能方面的提升。在生态，分布式计算框架除了Spark外，Flink也尤为亮眼，且支持更多NameNode，具体参考：https://hadoop.apache.org/docs/r3.0.0/
+
+
+
+### 二. Hadoop集群安装
+
+#### 2.1 集群规划
+
+| 集群规划       | 规划                                                         |
+| -------------- | ------------------------------------------------------------ |
+| 操作系统       | Windows、Mac                                                 |
+| 虚拟软件       | VMware（windows）、Parallel Desktop（Mac）                   |
+| 虚拟机         | 主机名：ben01，IP地址：192.168.10.101<br />主机名：ben02，IP地址：192.168.10.102<br />主机名：ben03，IP地址：192.168.10.103 |
+| 软件包上传路径 | /root/softwares                                              |
+| 软件包安装路径 | /usr/local                                                   |
+| JDK            | Jdk-8u221-linux-x64.tar.gz                                   |
+| Hadoop         | hadoop-3.3.1.tar.gz                                          |
+| 用户           | root                                                         |
+
