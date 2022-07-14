@@ -100,12 +100,65 @@ Hadoop3.0新扩展的两个模块：
 | 集群规划       | 规划                                                         |
 | -------------- | ------------------------------------------------------------ |
 | 操作系统       | Windows、Mac                                                 |
-| 虚拟软件       | VMware（windows）、Parallel Desktop（Mac）<br />或者直接去云厂商开3台 |
-| 虚拟机         | 主机名：ben01，IP地址：192.168.10.101<br />主机名：ben02，IP地址：192.168.10.102<br />主机名：ben03，IP地址：192.168.10.103 |
+| 虚拟软件       | VMware（windows）、Parallel Desktop（Mac）<br />或者直接去云厂商开3台centos7.7 |
+| 虚拟机         | 主机名：ben01<br />主机名：ben02<br />主机名：ben03          |
 | 配置           | 主机01：2核,4G,30G<br />主机02：1核,2G,30G<br />主机03：1核,2G,30G |
 | 软件包上传路径 | /root/softwares                                              |
 | 软件包安装路径 | /usr/local                                                   |
-| JDK            | Jdk-8u221-linux-x64.tar.gz                                   |
+| JDK            | Jdk-8u321-linux-x64.tar.gz                                   |
 | Hadoop         | hadoop-3.3.1.tar.gz                                          |
 | 用户           | root                                                         |
+
+
+
+#### 2.2 安装JDK
+
+> 三台机器都需要做
+
+2.2.1 检查是否有内置JDK，如有则卸载
+
+~~~shell
+[root@ben01 ~]# rpm -qa | grep jdk  # 查看是否有
+[root@ben01 ~]# rpm -e xxxxxxxx --nodeps  # 有则卸载
+~~~
+
+2.2.2 上传jdk1.8到/root/softwares下
+
+2.2.3 解压jdk到/usr/local/下
+
+~~~shell
+[root@ben01 softwares]# tar -zxvf jdk-8u321-linux-x64.tar.gz -C /usr/local
+~~~
+
+2.2.4 更名jdk
+
+~~~shell
+[root@ben01 softwares]# cd /usr/local
+[root@ben01 local]# mv jdk1.8.0_321/  jdk
+~~~
+
+2.2.5 配置jdk的环境变量：/etc/profile
+
+~~~shell
+[root@ben01 local]# vi /etc/profile  # 在最下面添加如下内容
+
+#jdk environment
+export JAVA_HOME=/usr/local/jdk
+export PATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$PATH
+~~~
+
+2.2.6 使当前窗口生效
+
+~~~shell
+[root@ben01 local]# source /etc/profile
+~~~
+
+2.2.7 验证jdk换季
+
+~~~shell
+[root@ben01 local]# java -version
+[root@ben01 local]# java
+~~~
+
+![1657779529246](assets/1657779529246.png)
 
