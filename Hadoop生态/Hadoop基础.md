@@ -101,7 +101,7 @@ Hadoop3.0新扩展的两个模块：
 | -------------- | ------------------------------------------------------------ |
 | 操作系统       | Windows、Mac                                                 |
 | 虚拟软件       | VMware（windows）、Parallel Desktop（Mac）<br />或者直接去云厂商开3台centos7.7 |
-| 虚拟机         | 主机名：ben01<br />主机名：ben02<br />主机名：ben03          |
+| 虚拟机         | 主机名：ben01，IP地址192.168.10.101<br />主机名：ben02，IP地址192.168.10.102<br />主机名：ben03，IP地址192.168.10.103 |
 | 配置           | 主机01：2核,4G,30G<br />主机02：1核,2G,30G<br />主机03：1核,2G,30G |
 | 软件包上传路径 | /root/softwares                                              |
 | 软件包安装路径 | /usr/local                                                   |
@@ -127,6 +127,7 @@ Hadoop3.0新扩展的两个模块：
 2.2.3 解压jdk到/usr/local/下
 
 ~~~shell
+[root@ben01 ~]# cd softwares/
 [root@ben01 softwares]# tar -zxvf jdk-8u321-linux-x64.tar.gz -C /usr/local
 ~~~
 
@@ -161,4 +162,137 @@ export PATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$PATH
 ~~~
 
 ![1657779529246](assets/1657779529246.png)
+
+
+
+#### 2.3 完全分布式环境需求及安装
+
+~~~~
+1. 三台机器的防火墙必须是关闭的
+2. 确保三台机器的网络配置通畅
+3. 确保/etc/hosts文件配置了IP和hosts的映射关系
+4. 确保配置了三台机器的免密登录认证
+5. 确保所有机器的时间同步
+6. JDK和Hadoop的环境变量配置
+~~~~
+
+2.3.1 关闭防火墙
+
+~~~shell
+[root@ben01 ~]# systemctl stop firewalld
+[root@ben01 ~]# systemctl disable firewalld
+[root@ben01 ~]# systemctl stop NetworkManager
+[root@ben01 ~]# systemctl disable NetworkManager
+
+# 最好也把selinux关闭，将SELINUXTYPE设置为disabled
+[root@ben01 ~]# vi /etc/selinux/config
+SELINUXTYPE=disabled
+~~~
+
+2.3.2 静态IP和主机名配置
+
+> 作者直接开的云厂商的服务
+
+~~~shell
+-- 1.配置静态IP（确保NAT模式）
+vi /etc/sysconfig/network-scripts/ifcfg-ens33
+
+BOOTPROTO=static  # dhcp改为static
+............
+ONBOOT=yes        # no改为yes
+IPADDR=192.168.10.101 # 添加IPADDR属性和ip地址
+PREFIX=24  # 添加NETMASK=255.255.255.0 或者 PREFIX=24 
+GATEWAY=192.168.10.2  # 添加GATEWAY网关
+DNS1=114.114.114.114  # 天假DNS1和备份DNS
+DNS2=8.8.8.8
+
+-- 2.重启网络服务
+systemctl restart network
+service network restart
+
+-- 3.修改主机名
+hostnamectl set-hostname ben01  # 可以设置成自己的名字
+hostname  # 即可查看是否设置完成，需要重连才能显示
+~~~
+
+2.3.3  配置/etc/hosts文件
+
+~~~shell
+[root@ben01 ~]# vi /etc/hosts
+
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+# 添加本机的静态IP和本机主机名之间的映射关系
+10.206.0.10 ben01  
+10.206.16.4 ben02
+10.206.16.8 ben03
+~~~
+
+![1657781271931](assets/1657781271931.png)
+
+2.3.4 免密登录认证
+
+~~~shell
+-- 1.使用rsa加密技术，生成公钥和密钥，一路回车即可
+[root@ben01 ~]# cd ~
+[root@ben01 ~]# ssh-keygen -t rsa
+
+-- 2.进入~/.ssh目录下，使用ssh-copy-id命令，需要输入密码
+[root@ben01 ~]# cd ~/.ssh
+[root@ben01 .ssh]# ssh-copy-id  root@ben01
+
+-- 3.进行验证
+[root@ben01 .ssh]# ssh ben01
+# 下面第一次执行时输入yes后，不提示输入密码就对了
+[root@ben01 ~]# ssh localhost
+[root@ben01 ~]# ssh 0.0.0.0
+~~~
+
+2.3.5 时间同步
+
+> 云厂买的则不需要，已经自动同步了
+
+~~~shell
+# 1.选择集群中的某一台机器作为时间服务器，例如ben01
+# 2.保证这台服务器安装了ntp.x86_64
+# 3.保证ntpd 服务运行
+[root@ben01 ~]# sudo service ntpd start
+[root@ben01 ~]# chkcofig ntpd on
+
+# 4.配置相应文件
+[root@ben01 ~]# vi /etc/ntp.conf
+# Hosts on local network are less restricted.
+# restrict 192.168.1.0 mask 255.255.255.0 nomodify notrap 
+# 添加集群中的网络段位
+restrict 192.168.10.0 mask 255.255.255.0 nomodify notrap
+
+# Use public servers from the pool.ntp.org project.
+# Please consider joining the pool (http://www.pool.ntp.org/join.html).
+# server 0.centos.pool.ntp.org iburst 注释掉
+# server 1.centos.pool.ntp.org iburst 注释掉
+# server 2.centos.pool.ntp.org iburst 注释掉
+# server 3.centos.pool.ntp.org iburst 注释掉
+servcer 127.127.1.0    -master作为服务器
+# 5.其它机器要保证安装ntpdate.x86_64
+# 6.其它机器要使用root定义定时器
+*/1 * * * * /usr/sbin/ntpdate -u ben01
+~~~
+
+2.3.6 Hadoop安装与环境变量配置
+
+~~~shell
+# 1.
+~~~
+
+
+
+
+
+~~~
+systemctl stop firewalld
+systemctl disable firewalld
+systemctl stop NetworkManager
+systemctl disable NetworkManager
+~~~
 
