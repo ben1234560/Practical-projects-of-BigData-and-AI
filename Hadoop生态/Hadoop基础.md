@@ -81,3 +81,12 @@ Hadoop3.0新扩展的两个模块：
   - Hadoop Submarine: Hadoop的机器学习引擎
 ~~~
 
+
+
+#### 1.6 Hadoop的生态系统
+
+2.0时代
+
+![1657767090189](assets/1657767090189.png)
+
+> 在3.0版本中，除了性能方面的提升。在生态，分布式计算框架除了Spark外，Flink也尤为亮眼，且支持更多NameNode，具体参考：https://hadoop.apache.org/docs/r3.0.0/
