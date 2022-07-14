@@ -65,3 +65,19 @@ Hadoop是Apache基金会旗下一个开源的分布式存储和分析计算平�
 - 2009年，Hadoop把1TB数据的排序时间缩短到62秒。
 ~~~
 
+
+
+#### 1.5 Hadoop的组成部分
+
+~~~
+Hadoop2.0以后的四个模块：
+  - Hadoop Common: Hadoop模块的通用组件
+  - Hadoop distributed File System: 分布式文件系统
+  - Hadoop YARN: 作业调度和资源管理框架
+  - Hadoop MapReduce: 基于YARN的大型数据集并行计算处理框架
+  
+Hadoop3.0新扩展的两个模块：
+  - Hadoop Ozone: Hadoop的对象存储机制
+  - Hadoop Submarine: Hadoop的机器学习引擎
+~~~
+
