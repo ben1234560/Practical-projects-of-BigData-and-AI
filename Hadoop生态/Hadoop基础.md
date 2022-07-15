@@ -394,3 +394,26 @@ yarn-site.xml
 </configuration>
 ~~~
 
+2.4.4 mapred-site.xml
+
+~~~xml
+[root@ben01 hadoop]# vi mapred-site.xml
+<configuration>
+	<!--指定mapreduce使用yarn资源管理器-->
+ 	<property>
+		 <name>mapreduce.framework.name</name>
+		 <value>yarn</value>
+ 	</property>
+ 	<!--配置作业历史服务器的地址-->
+ 	<property>
+ 		<name>mapreduce.jobhistory.address</name>
+ 		<value>qianfeng01:10020</value>
+ 	</property>
+ 	<!-- 配置作业历史服务器的http地址 -->
+	<property>
+		<name>mapreduce.jobhistory.webapp.address</name>
+ 		<value>ben01:19888</value>
+ 	</property>
+</configuration>
+~~~
+
