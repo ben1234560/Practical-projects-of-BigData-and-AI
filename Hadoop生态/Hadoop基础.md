@@ -173,7 +173,7 @@ export PATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$PATH
 3. 确保/etc/hosts文件配置了IP和hosts的映射关系
 4. 确保配置了三台机器的免密登录认证
 5. 确保所有机器的时间同步
-6. JDK和Hadoop的环境变量配置
+6. 三台机器JDK和Hadoop的环境变量配置
 ~~~~
 
 2.3.1 关闭防火墙
@@ -194,7 +194,7 @@ SELINUXTYPE=disabled
 > 作者直接开的云厂商的服务
 
 ~~~shell
--- 1.配置静态IP（确保NAT模式）
+# 1.配置静态IP（确保NAT模式）
 vi /etc/sysconfig/network-scripts/ifcfg-ens33
 
 BOOTPROTO=static  # dhcp改为static
@@ -206,16 +206,18 @@ GATEWAY=192.168.10.2  # 添加GATEWAY网关
 DNS1=114.114.114.114  # 天假DNS1和备份DNS
 DNS2=8.8.8.8
 
--- 2.重启网络服务
+# 2.重启网络服务
 systemctl restart network
 service network restart
 
--- 3.修改主机名
+# 3.修改主机名
 hostnamectl set-hostname ben01  # 可以设置成自己的名字
 hostname  # 即可查看是否设置完成，需要重连才能显示
 ~~~
 
 2.3.3  配置/etc/hosts文件
+
+> 作者是用的云厂商机器，IP有所不同
 
 ~~~shell
 [root@ben01 ~]# vi /etc/hosts
@@ -234,15 +236,15 @@ hostname  # 即可查看是否设置完成，需要重连才能显示
 2.3.4 免密登录认证
 
 ~~~shell
--- 1.使用rsa加密技术，生成公钥和密钥，一路回车即可
+# 1.使用rsa加密技术，生成公钥和密钥，一路回车即可
 [root@ben01 ~]# cd ~
 [root@ben01 ~]# ssh-keygen -t rsa
 
--- 2.进入~/.ssh目录下，使用ssh-copy-id命令，需要输入密码
+# 2.进入~/.ssh目录下，使用ssh-copy-id命令，需要输入密码
 [root@ben01 ~]# cd ~/.ssh
 [root@ben01 .ssh]# ssh-copy-id  root@ben01
 
--- 3.进行验证
+# 3.进行验证
 [root@ben01 .ssh]# ssh ben01
 # 下面第一次执行时输入yes后，不提示输入密码就对了
 [root@ben01 ~]# ssh localhost
@@ -282,17 +284,27 @@ servcer 127.127.1.0    -master作为服务器
 2.3.6 Hadoop安装与环境变量配置
 
 ~~~shell
-# 1.
+# 1.上传和解压软件包
+[root@ben01 softwares]# tar zxvf hadoop-3.3.1.tar.gz -C /usr/local/
+
+# 2.进入local里，给软件改名
+[root@ben01 softwares]# cd /usr/local/
+[root@ben01 local]# mv hadoop-3.3.1/ hadoop
+
+# 3.配置环境变量，再最下面追加
+[root@ben01 local]# vi /etc/profile
+
+......
+#hadoop environment
+export HADOOP_HOME=/usr/local/hadoop
+export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
+
+# 4.刷新环境并验证
+[root@ben01 local]# source /etc/profile
+[root@ben01 local]# hadoop version
 ~~~
 
+![1657865386616](assets/1657865386616.png)
 
-
-
-
-~~~
-systemctl stop firewalld
-systemctl disable firewalld
-systemctl stop NetworkManager
-systemctl disable NetworkManager
-~~~
+> 注意，是三台机器都完成了如上的操作
 
