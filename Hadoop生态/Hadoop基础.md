@@ -491,3 +491,28 @@ fi
 .........
 ~~~
 
+2.4.8 slaves
+
+~~~sh
+[root@ben01 hadoop]# vi slaves
+ben01
+ben02
+ben03
+~~~
+
+2.4.9 分发到另两台节点
+
+~~~sh
+# 1.同步Hadoop到另外两台节点
+[root@ben01 etc]# cd /usr/local/hadoop/etc
+[root@ben01 etc]# ls
+hadoop
+[root@ben01 etc]# scp -r hadoop/ ben02:$PWD
+[root@ben01 etc]# scp -r hadoop/ ben03:$PWD
+
+# 2.同步profile到另外两台节点
+[root@ben01 etc]# scp /etc/profile ben02:/etc/
+[root@ben01 etc]# scp /etc/profile ben03:/etc/
+~~~
+
+![1657870331416](assets/1657870331416.png)
