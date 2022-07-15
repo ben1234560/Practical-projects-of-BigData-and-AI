@@ -308,3 +308,31 @@ export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
 
 > 注意，是三台机器都完成了如上的操作
 
+
+
+#### 2.4 Hadoop的配置文件
+
+2.4.1 概述
+
+我们需要通过配置若干配置文件，来实现Hadoop集群的配置信息。需要配置的文件有：
+
+~~~
+hadoop-env.sh
+yarn-env.sh
+core-site.xml
+hdfs-site.xml
+mapred-site.xml
+yarn-site.xml
+
+在Hadoop安装完成后，会在$HADOOP_HOME/share路径下，有若干个*-default.xml文件，这些文件中记录了默认的配置信息，同时，在代码中，我们也可以配置Hadoop的配置信息。
+这些位置配置的Hadoop，优先级为：代码设置 > *-site.xml > *-default.xml
+~~~
+
+集群规划：
+
+| Node  | Applications                                                 |
+| ----- | ------------------------------------------------------------ |
+| ben01 | NameNode<br />DataNode<br />ResourceManager<br />NodeManager |
+| ben02 | SecondaryNameNode<br />DataNode<br />NodeManager             |
+| ben03 | DataNode<br />NodeManager                                    |
+
