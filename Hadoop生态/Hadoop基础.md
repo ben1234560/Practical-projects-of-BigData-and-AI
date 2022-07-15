@@ -469,9 +469,25 @@ yarn-site.xml
 
 2.4.6 hadoop-env.sh
 
-~~~xml
-
+~~~shell
+[root@ben01 hadoop]# vi hadoop-env.sh
+......
+# The java implementation to use. By default, this environment
+export JAVA_HOME=/usr/local/jdk
+......
 ~~~
 
+2.4.7 yarn-env.sh
 
+~~~sh
+[root@ben01 hadoop]# vi yarn-env.sh
+.........
+# some Java parameters
+export JAVA_HOME=/usr/local/jdk
+if [ "$JAVA_HOME" != "" ]; then
+  #echo "run java in $JAVA_HOME"
+  JAVA_HOME=$JAVA_HOME
+fi
+.........
+~~~
 
