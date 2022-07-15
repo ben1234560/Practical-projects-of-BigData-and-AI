@@ -407,7 +407,7 @@ yarn-site.xml
  	<!--配置作业历史服务器的地址-->
  	<property>
  		<name>mapreduce.jobhistory.address</name>
- 		<value>qianfeng01:10020</value>
+ 		<value>ben01:10020</value>
  	</property>
  	<!-- 配置作业历史服务器的http地址 -->
 	<property>
@@ -416,4 +416,62 @@ yarn-site.xml
  	</property>
 </configuration>
 ~~~
+
+2.4.5 yarn-site.xml
+
+~~~xml
+[root@ben01 hadoop]# vi yarn-site.xml
+<configuration>
+	<!-- 指定yarn的shuffle技术 -->
+ 	<property>
+ 		<name>yarn.nodemanager.aux-services</name>
+ 		<value>mapreduce_shuffle</value>
+ 	</property>
+	<!-- 指定resourcemanager的主机名 --> 
+ 	<property>
+ 		<name>yarn.resourcemanager.hostname</name>
+ 		<value>ben01</value>
+ 	</property>
+	<!--下面的可选--> 
+ 	<!--指定shuffle对应的类-->
+ 	<property>
+ 		<name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
+ 		<value>org.apache.hadoop.mapred.ShuffleHandler</value>
+ 	</property>
+    
+ 	<!--配置resourcemanager的内部通讯地址 -->
+ 	<property>
+ 		<name>yarn.resourcemanager.address</name>
+ 		<value>ben01:8032</value>
+ 	</property>
+ 	<!--配置resourcemanager的scheduler内部通讯地址 -->
+ 	<property>
+ 		<name>yarn.resourcemanager.scheduler.address</name>
+ 		<value>ben01:8030</value>
+ 	</property>
+    <!--配置resoucemanager的资源调度的内部通讯地址-->
+ 	<property>
+ 		<name>yarn.resourcemanager.resource-tracker.address</name>
+ 		<value>ben01:8031</value>
+ 	</property>
+ 	<!--配置resourcemanager的管理员的内部通讯地址-->
+ 	<property>
+ 		<name>yarn.resourcemanager.admin.address</name>
+ 		<value>ben01:8033</value>
+ 	</property>
+ 	<!--配置resourcemanager的web ui 的监控页面-->
+ 	<property>
+ 		<name>yarn.resourcemanager.webapp.address</name>
+ 		<value>ben01:8088</value>
+ 	</property>
+</configuration>
+~~~
+
+2.4.6 hadoop-env.sh
+
+~~~xml
+
+~~~
+
+
 
