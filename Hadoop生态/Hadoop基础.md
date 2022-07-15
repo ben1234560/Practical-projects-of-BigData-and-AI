@@ -336,3 +336,61 @@ yarn-site.xml
 | ben02 | SecondaryNameNode<br />DataNode<br />NodeManager             |
 | ben03 | DataNode<br />NodeManager                                    |
 
+2.4.2 core-site.xml
+
+~~~xml
+[root@ben01 ~]# cd $HADOOP_HOME/etc/hadoop/
+[root@ben01 hadoop]# vi core-site.xml
+<configuration>
+	<!-- hdfs地址名称：schame,ip,port-->
+ 	<!-- 在Hadoop1.x版本中，默认使用9000。Hadoop2.x默认使用端口为8020 -->
+ 	<property>
+ 		<name>fs.defaultFS</name>
+		<value>hdfs://ben01:8020</value>
+ 	</property>
+ 	<!-- hdfs的基础路径，被其它属性依赖的一个基础路径 -->
+ 	<property>
+ 		<name>hadoop.tmp.dir</name>
+ 		<value>/usr/local/hadoop/tmp</value>
+ 	</property>
+</configuration>
+~~~
+
+2.4.3 hdfs-site.xml
+
+~~~xml
+[root@ben01 hadoop]# vi hdfs-site.xml
+<configuration>
+ 	<!-- namenode守护进程管理的元数据文件fsimag存储的位置-->
+ 	<property>
+ 		<name>dfs.namenode.name.dir</name>
+ 		<value>file://${hadoop.tmp.dir}/dfs/name</value>
+ 	</property>
+	<--确定DFS数据节点应该将其块存储在本地文件系统的何处--!> 
+ 	<property>
+ 		<name>dfs.datanode.data.dir</name>
+ 		<value>file://${hadoop.tmp.dir}/dfs/data</value>
+ 	</property>
+	<--块的副本数--!> 
+ 	<property>
+ 		<name>dfs.replication</name>
+ 		<value>3</value>
+ 	</property>
+ 	<!--块的大小（128M），下面的单位是字节-->
+ 	<property>
+ 		<name>dfs.blocksize</name>
+		<value>134217728</value>
+ 	</property>
+ 	<!-- secondarynamenode守护进程的http地址：主机名和端口号。参考守护进程布局-->
+ 	<property>
+ 		<name>dfs.namenode.secondary.http-address</name>
+ 		<value>ben02:50090</value>
+ 	</property>
+ 	<!-- namenode守护进程的http地址：主机名和端口号。参考守护进程布局-->
+ 	<property>
+ 		<name>dfs.namenode.http-address</name>
+ 		<value>ben01:50070</value>
+ 	</property> 
+</configuration>
+~~~
+
