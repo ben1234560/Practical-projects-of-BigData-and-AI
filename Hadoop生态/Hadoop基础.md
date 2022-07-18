@@ -238,20 +238,27 @@ hostname  # 即可查看是否设置完成，需要重连才能显示
 2.3.4 免密登录认证
 
 ~~~shell
-# 1.使用rsa加密技术，生成公钥和密钥，一路回车即可
+# 1.使用rsa加密技术，生成公钥和密钥，一路回车即可，三台机器都需要做
 [root@ben01 ~]# cd ~
 [root@ben01 ~]# ssh-keygen -t rsa
 
-# 2.进入~/.ssh目录下，使用ssh-copy-id命令，需要输入密码
+# 2.01免密登录自己和02和03，进入~/.ssh目录下，使用ssh-copy-id命令，需要输入密码
 [root@ben01 ~]# cd ~/.ssh
-[root@ben01 .ssh]# ssh-copy-id  root@ben01
+[root@ben01 .ssh]# ssh-copy-id  ben01  # 输入密码
+[root@ben01 .ssh]# ssh-copy-id  ben02  # 输入密码
+[root@ben01 .ssh]# ssh-copy-id  ben03  # 输入密码
 
-# 3.进行验证
-[root@ben01 .ssh]# ssh ben01
-# 下面第一次执行时输入yes后，不提示输入密码就对了
+# 3.进行验证，下面第一次执行时输入yes后，不提示输入密码就对了
+[root@ben01 .ssh]# ssh ben02
 [root@ben01 ~]# ssh localhost
 [root@ben01 ~]# ssh 0.0.0.0
+
+# 4.同样的，ben02和ben03也需要做对其它两台的免密
 ~~~
+
+> 如下图
+>
+> ![1658122127131](assets/1658122127131.png)
 
 2.3.5 时间同步
 
@@ -342,131 +349,132 @@ yarn-site.xml
 
 ~~~xml
 [root@ben01 ~]# cd $HADOOP_HOME/etc/hadoop/
-[root@ben01 hadoop]# vi core-site.xml
+[root@ben01 hadoop]# vim core-site.xml
 <configuration>
-	<!-- hdfs地址名称：schame,ip,port-->
- 	<!-- 在Hadoop1.x版本中，默认使用9000。Hadoop2.x默认使用端口为8020 -->
- 	<property>
- 		<name>fs.defaultFS</name>
-		<value>hdfs://ben01:8020</value>
- 	</property>
- 	<!-- hdfs的基础路径，被其它属性依赖的一个基础路径 -->
- 	<property>
- 		<name>hadoop.tmp.dir</name>
- 		<value>/usr/local/hadoop/tmp</value>
- 	</property>
+        <property>
+                <name>fs.defaultFS</name>
+                <value>hdfs://ben01:8020</value>
+        </property>
+        <property>
+                <name>hadoop.tmp.dir</name>
+                <value>/usr/local/hadoop/tmp</value>
+        </property>
 </configuration>
 ~~~
 
 2.4.3 hdfs-site.xml
 
 ~~~xml
-[root@ben01 hadoop]# vi hdfs-site.xml
+[root@ben01 hadoop]# vim hdfs-site.xml
 <configuration>
- 	<!-- namenode守护进程管理的元数据文件fsimag存储的位置-->
- 	<property>
- 		<name>dfs.namenode.name.dir</name>
- 		<value>file://${hadoop.tmp.dir}/dfs/name</value>
- 	</property>
-	<--确定DFS数据节点应该将其块存储在本地文件系统的何处--!> 
- 	<property>
- 		<name>dfs.datanode.data.dir</name>
- 		<value>file://${hadoop.tmp.dir}/dfs/data</value>
- 	</property>
-	<--块的副本数--!> 
- 	<property>
- 		<name>dfs.replication</name>
- 		<value>3</value>
- 	</property>
- 	<!--块的大小（128M），下面的单位是字节-->
- 	<property>
- 		<name>dfs.blocksize</name>
-		<value>134217728</value>
- 	</property>
- 	<!-- secondarynamenode守护进程的http地址：主机名和端口号。参考守护进程布局-->
- 	<property>
- 		<name>dfs.namenode.secondary.http-address</name>
- 		<value>ben02:50090</value>
- 	</property>
- 	<!-- namenode守护进程的http地址：主机名和端口号。参考守护进程布局-->
- 	<property>
- 		<name>dfs.namenode.http-address</name>
- 		<value>ben01:50070</value>
- 	</property> 
+    <!-- namenode守护进程管理的元数据文件fsimag存储的位置-->
+    <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>file://${hadoop.tmp.dir}/dfs/name</value>
+    </property>
+    <!--确定DFS数据节点应该将其块存储在本地文件系统的何处-->
+    <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>file://${hadoop.tmp.dir}/dfs/data</value>
+    </property>
+    <!--块的副本数-->
+    <property>
+        <name>dfs.replication</name>
+        <value>3</value>
+        </property>
+        <!--块的大小（128M），下面的单位是字节-->
+        <property>
+                <name>dfs.blocksize</name>
+                <value>134217728</value>
+        </property>
+        <!-- secondarynamenode守护进程的http地址：主机名和端口号。参考守护进程
+布局-->
+        <property>
+                <name>dfs.namenode.secondary.http-address</name>
+                <value>ben02:50090</value>
+        </property>
+        <!-- namenode守护进程的http地址：主机名和端口号。参考守护进程布局-->
+        <property>
+                <name>dfs.namenode.http-address</name>
+                <value>ben01:50070</value>
+        </property>
 </configuration>
 ~~~
 
 2.4.4 mapred-site.xml
 
 ~~~xml
-[root@ben01 hadoop]# vi mapred-site.xml
+[root@ben01 hadoop]# vim mapred-site.xml
 <configuration>
-	<!--指定mapreduce使用yarn资源管理器-->
- 	<property>
-		 <name>mapreduce.framework.name</name>
-		 <value>yarn</value>
- 	</property>
- 	<!--配置作业历史服务器的地址-->
- 	<property>
- 		<name>mapreduce.jobhistory.address</name>
- 		<value>ben01:10020</value>
- 	</property>
- 	<!-- 配置作业历史服务器的http地址 -->
-	<property>
-		<name>mapreduce.jobhistory.webapp.address</name>
- 		<value>ben01:19888</value>
- 	</property>
+        <!--指定mapreduce使用yarn资源管理器-->
+        <property>
+                 <name>mapreduce.framework.name</name>
+                 <value>yarn</value>
+        </property>
+        <!--配置作业历史服务器的地址-->
+        <property>
+                <name>mapreduce.jobhistory.address</name>
+                <value>ben01:10020</value>
+        </property>
+        <!-- 配置作业历史服务器的http地址 -->
+        <property>
+                <name>mapreduce.jobhistory.webapp.address</name>
+                <value>ben01:19888</value>
+        </property>
 </configuration>
 ~~~
 
 2.4.5 yarn-site.xml
 
 ~~~xml
-[root@ben01 hadoop]# vi yarn-site.xml
+[root@ben01 hadoop]# vim yarn-site.xml
 <configuration>
-	<!-- 指定yarn的shuffle技术 -->
- 	<property>
- 		<name>yarn.nodemanager.aux-services</name>
- 		<value>mapreduce_shuffle</value>
- 	</property>
-	<!-- 指定resourcemanager的主机名 --> 
- 	<property>
- 		<name>yarn.resourcemanager.hostname</name>
- 		<value>ben01</value>
- 	</property>
-	<!--下面的可选--> 
- 	<!--指定shuffle对应的类-->
- 	<property>
- 		<name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
- 		<value>org.apache.hadoop.mapred.ShuffleHandler</value>
- 	</property>
-    
- 	<!--配置resourcemanager的内部通讯地址 -->
- 	<property>
- 		<name>yarn.resourcemanager.address</name>
- 		<value>ben01:8032</value>
- 	</property>
- 	<!--配置resourcemanager的scheduler内部通讯地址 -->
- 	<property>
- 		<name>yarn.resourcemanager.scheduler.address</name>
- 		<value>ben01:8030</value>
- 	</property>
+
+<!-- Site specific YARN configuration properties -->
+        <!-- 指定yarn的shuffle技术 -->
+        <property>
+                <name>yarn.nodemanager.aux-services</name>
+                <value>mapreduce_shuffle</value>
+        </property>
+        <!-- 指定resourcemanager的主机名 -->
+        <property>
+                <name>yarn.resourcemanager.hostname</name>
+                <value>ben01</value>
+        </property>
+        <!--下面的可选-->
+        <!--指定shuffle对应的类-->
+        <property>
+                <name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
+                <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+        </property>
+
+        <!--配置resourcemanager的内部通讯地址 -->
+        <property>
+                <name>yarn.resourcemanager.address</name>
+                <value>ben01:8032</value>
+        </property>
+        <!--配置resourcemanager的scheduler内部通讯地址 -->
+        <property>
+                <name>yarn.resourcemanager.scheduler.address</name>
+                <value>ben01:8030</value>
+        </property>
     <!--配置resoucemanager的资源调度的内部通讯地址-->
- 	<property>
- 		<name>yarn.resourcemanager.resource-tracker.address</name>
- 		<value>ben01:8031</value>
- 	</property>
- 	<!--配置resourcemanager的管理员的内部通讯地址-->
- 	<property>
- 		<name>yarn.resourcemanager.admin.address</name>
- 		<value>ben01:8033</value>
- 	</property>
- 	<!--配置resourcemanager的web ui 的监控页面-->
- 	<property>
- 		<name>yarn.resourcemanager.webapp.address</name>
- 		<value>ben01:8088</value>
- 	</property>
+        <property>
+                <name>yarn.resourcemanager.resource-tracker.address</name>
+                <value>ben01:8031</value>
+        </property>
+        <!--配置resourcemanager的管理员的内部通讯地址-->
+        <property>
+                <name>yarn.resourcemanager.admin.address</name>
+                <value>ben01:8033</value>
+        </property>
+        <!--配置resourcemanager的web ui 的监控页面-->
+        <property>
+                <name>yarn.resourcemanager.webapp.address</name>
+                <value>ben01:8088</value>
+        </property>
 </configuration>
+
 ~~~
 
 2.4.6 hadoop-env.sh
@@ -493,5 +501,179 @@ fi
 .........
 ~~~
 
->>>>>>> parent of ae04ba1 (Add. 2.4.9 分发到另两台节点)
+2.4.8 workers
+
+此文件用于指定datanode守护进程所在的机器点主机名
+
+~~~sh
+[root@ben01 hadoop]# cat workers
+ben01
+ben02
+ben03
+~~~
+
+> **注意**：2.x版本，是添加一个slaves文件，内容与上面一致
+
+2.4.9 分发到另外两台节点
+
+~~~sh
+[root@ben01 etc]# cd /usr/local/
+[root@ben01 local]# scp -r hadoop ben02:$PWD
+[root@ben01 local]# scp -r hadoop ben03:$PWD
+
+# 同步profile到另两台
+[root@ben01 local]# scp /etc/profile ben02:/etc
+[root@ben01 local]# scp /etc/profile ben03:/etc
+~~~
+
+
+
+#### 2.5 格式化与启动
+
+2.5.1 格式化集群
+
+1）在ben01机器上运行命令
+
+~~~sh
+[root@ben01 local]# hdfs namenode -format
+~~~
+
+![1657871956423](assets/1657871956423.png)
+
+> **用户切换，或权限不足的报错**
+>
+> ![1657876970998](assets/1657876970998.png)
+>
+> **原因**
+>
+> 用户切换，或权限不足
+>
+> **解决办法**
+>
+> 将上面的hadoop-env.sh文件，添加如下内容
+>
+> ~~~sh
+> export HDFS_NAMENODE_USER=root
+> export HDFS_DATANODE_USER=root
+> export HDFS_SECONDARYNAMENODE_USER=root
+> export YARN_RESOURCEMANAGER_USER=root
+> export YARN_NODEMANAGER_USER=root
+> ~~~
+
+2）格式化的相关信息解读
+
+~~~sh
+--1.生成一个集群唯一标识符：clusterID
+--2.生成一个块池唯一标识符：blockPoolID
+--3.生成namenode进程管理内容（fsimage）的存储路径：
+默认配置文件属性hadoop.tmp.dir指定的路径下生成dfs/name目录
+--4.生成就想fsimage，记录分布式文件系统根路径的元数据
+--5.其它信息都可以查看下，比如块的副本数，集群的fsOwner等
+~~~
+
+3）目录里的内容查看
+
+![1657871956423](assets/1657873094885.png)
+
+2.5.2 启动集群
+
+1）启动脚本和关闭脚本介绍
+
+~~~sh
+1.启动脚本
+  -- start-dfs.sh  	:用于启动hdfs集群的脚本
+  -- start-yarn.sh	:用于启动yarn守护进程
+  -- start-all.sh	:用于启动hdfs和yarn
+2.关闭脚本
+  -- stop-dfs.sh	:用于关闭hdfs集群的脚本
+  -- stop-yarn.sh	:用于关闭yarn守护进程
+  -- stop-all.sh	:用于关闭hdfs和yarn
+3.单个守护进程脚本
+  -- hadoop-daemons.sh	:用于单独启动或关闭的某一个守护进程的脚本
+  -- hadoop-daemon.sh	:用于单独启动或关闭hdfs的某一个守护进程的脚本
+  reg:
+    hadoop-daemon.sh [start|stop] [namenode|datanode|secondarynamenode]
+  
+  -- yarn-daemons.sh	:用于单独启动或关闭hdfs的某一个守护进程的脚本
+  -- yarn-daemon.sh		:用于单独启动或关闭hdfs的某一个守护进程的脚本
+  reg:
+    yarn-daemon.sh [start|stop] [resourcemanager|nodemanager]
+~~~
+
+2）启动HDFS
+
+~~~sh
+[root@ben01 hadoop]# start-dfs.sh
+~~~
+
+![1658131281677](assets/1658131281677.png)
+
+> **主机间没做免密的报错**
+>
+> ![1658122834445](assets/1658122834445.png)
+
+3）验证，jps查看进程，具体如下
+
+~~~sh
+[root@ben01 hadoop]# jps
+29411 NameNode
+8233 Jps
+29609 DataNode
+
+[root@ben02 hadoop]# jps
+19457 Jps
+18914 DataNode
+19127 SecondaryNameNode
+
+[root@ben03 hadoop]# jps
+19252 Jps
+17960 DataNode
+~~~
+
+4）启动yarn
+
+~~~sh
+[root@ben01 hadoop]# start-yarn.sh
+~~~
+
+> 成功图如下：
+>
+> ![1658131502394](assets/1658131502394.png)
+
+jps查看如下
+
+~~~sh
+[root@ben01 hadoop]# jps
+10352 Jps
+29411 NameNode
+29609 DataNode
+9646 ResourceManager
+9838 NodeManager
+
+[root@ben02 hadoop]# jps
+18914 DataNode
+31219 NodeManager
+19127 SecondaryNameNode
+31561 Jps
+
+[root@ben03 ~]# jps
+30023 NodeManager
+17960 DataNode
+31913 Jps
+~~~
+
+5）webUI查看
+
+~~~sh
+HDFS: http://1.13.169.142:50070
+YARN: http://1.13.169.142:8088
+~~~
+
+> 如果是云厂买的注意开放对应端口，效果图如下
+>
+> ![1658132018864](assets/1658132018864.png)
+>
+> ![1658132110932](assets/1658132110932.png)
+
+致此，恭喜你，hadoop集群已安装完成。
 
