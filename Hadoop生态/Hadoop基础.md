@@ -823,3 +823,11 @@ HDFS是一个分布式文件系统，我们可以使用一些命令来操作这�
 [root@ben01 ~]# hdfs dfs -mv /file1 /empty
 ~~~
 
+
+
+#### 3.9 复制hdfs的文件到hdfs的另一个目录
+
+~~~sh
+[root@ben01 ~]# hdfs dfs -cp /file2 /empty
+~~~
+
