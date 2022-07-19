@@ -831,3 +831,16 @@ HDFS是一个分布式文件系统，我们可以使用一些命令来操作这�
 [root@ben01 ~]# hdfs dfs -cp /file2 /empty
 ~~~
 
+
+
+#### 3.10 删除命令
+
+~~~sh
+[root@ben01 ~]# hdfs dfs -rm /file*
+Deleted /file2
+Deleted /file3
+
+[root@ben01 ~]# hdfs dfs -rmdir /empty/
+# 注：必须是空文件夹
+~~~
+
