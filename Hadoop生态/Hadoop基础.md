@@ -872,3 +872,14 @@ hdfs://ben01:8020  147.3 G  255.8 K    127.1 G    0%
 [root@ben01 ~]# hdfs dfs -chown root:supergroup /data
 ~~~
 
+
+
+#### 4.13 修改文件副本数
+
+~~~sh
+[root@ben01 ~]# hdfs dfs -setrep 5 /data
+Replication 5 set: /data/test.txt
+
+# 之前data下的test.txt的Replication会从3刷新后变成5
+~~~
+
