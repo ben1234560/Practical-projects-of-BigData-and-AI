@@ -846,7 +846,7 @@ Deleted /file3
 
 
 
-#### 4.11 查看磁盘利用率和文件大小
+#### 3.11 查看磁盘利用率和文件大小
 
 ~~~sh
 [root@ben01 ~]# hdfs dfs -df -h
@@ -860,7 +860,7 @@ hdfs://ben01:8020  147.3 G  255.8 K    127.1 G    0%
 
 
 
-#### 4.12 修改权限
+#### 3.12 修改权限
 
 ~~~sh
 [root@ben01 ~]# hdfs dfs -chmod 777 /data
@@ -874,18 +874,21 @@ hdfs://ben01:8020  147.3 G  255.8 K    127.1 G    0%
 
 
 
-#### 4.13 修改文件副本数
+#### 3.13 修改文件副本数
 
 ~~~sh
 [root@ben01 ~]# hdfs dfs -setrep 5 /data
 Replication 5 set: /data/test.txt
 
 # 之前data下的test.txt的Replication会从3刷新后变成5
+# 再改回来
+[root@ben01 ~]# hdfs dfs -setrep 3 /data
+Replication 3 set: /data/test.txt
 ~~~
 
 
 
-#### 4.14 查看文件的状态
+#### 3.14 查看文件的状态
 
 ~~~sh
 [root@ben01 ~]# hdfs dfs -stat %b /data/test.txt
@@ -907,7 +910,7 @@ Replication 5 set: /data/test.txt
 
 
 
-#### 4.15 测试
+#### 3.15 测试
 
 ~~~sh
 hdfs dfs [generic options] -test -[defsz] <path> 
@@ -922,4 +925,30 @@ OK
 [root@ben01 ~]# hdfs dfs -test -e /data/test111.txt && echo "OK" || echo "NO"
 NO
 ~~~
+
+
+
+### 四. HDFS块的概念
+
+#### 4.1 传统型分布式文件系统的缺点
+
+现在想象一下这种情况：有四个文件0.5TB的file1，1.2TB的file2，50GB的file3，100GB的file4；有7个服务器，每个服务器上有10个1TB的硬盘。
+
+![1658210426284](assets/1658210426284.png)
+
+在存储方式上，我们可以将四个文件存储在同一服务器上（当然大于1TB的文件需要切分），那么缺点也暴露了出来：
+
+1. 负载不均衡
+
+   ~~~
+   因为文件大小不一致，势必会导致有的节点磁盘的利用率高，有的利用率低
+   ~~~
+
+2. 网络瓶颈问题
+
+   ~~~
+   一个过大的文件存储在一个节点磁盘上，当并行处理时，每个线程都需要从这个节点磁盘上读取这个文件内容，那么就会出现网络瓶颈问题，不利于分布式的数据处理。
+   ~~~
+
+#### 4.2 HDFS块
 
