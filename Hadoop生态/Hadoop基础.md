@@ -844,3 +844,17 @@ Deleted /file3
 # 注：必须是空文件夹
 ~~~
 
+
+
+#### 4.11 查看磁盘利用率和文件大小
+
+~~~sh
+[root@ben01 ~]# hdfs dfs -df -h
+Filesystem            Size     Used  Available  Use%
+hdfs://ben01:8020  147.3 G  255.8 K    127.1 G    0%
+
+[root@ben01 ~]# hdfs dfs -du -h /data
+0   0   /data/a
+11  33  /data/test.txt
+~~~
+
