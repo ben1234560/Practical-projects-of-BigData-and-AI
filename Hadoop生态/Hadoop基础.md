@@ -975,5 +975,29 @@ HDFS块大小为什么为128MB
       - 不适合小文件的解释，从存储出发：虽然文件不到128M时不能占用整个空间，但是这个块的元数据依然会在内存中占150个字节
       - 不适合小文件的解释，从内存占用出发：假设存储一个块都是占用1M和都是128M，同样存储1PB数据，如果是以1M的小文件存储，占用的内存空间为1PB/1MB×150Byte=150G的内存。如果是以128MB的文件存储，占用空间为1PB/128M×150Byte=1.17G的内存占用。可以看到小文件存储比大文件存储占用更多内存。
 
+
+
 #### 4.4 块的相关参数设置
+
+~~~xml
+# 块大小在默认配置文件hdfs-default.xml中，我们可以在hdfs-default.xml中进行重置
+[root@ben01 hadoop]# ll /usr/local/hadoop/etc/hadoop/hdfs-site.xml
+<property>
+	<name>dfs.blocksize</name>
+    <value>134217728</value>
+	<description>默认块大小，以字节为单位。可以使用以下后缀（不区分大小写）：k,m,g,t,p,e以重新指定大小(例如128k, 512m, 1g等)</description>
+</property>
+
+<property>
+    <name>dfs.namenode.fs-limits.min-block-size</name>
+    <value>1048576</value>
+    <description>以字节为单位的最小块大小，由Namenode在创建时强制执行时间。可以防止意外创建带有小块文件降低性能</description>
+</property>
+
+<property>
+    <name>dfs.namenode.fs-limits.max-blocks-per-file</name>
+    <value>1048576</value>
+    <description>每个文件的最大块数，由写入时的Namenode执行。这可以防止创建降低性能的最大文件</description>
+</property>
+~~~
 
