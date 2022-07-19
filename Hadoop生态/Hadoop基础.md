@@ -905,3 +905,21 @@ Replication 5 set: /data/test.txt
 2）-stat后面只跟目录，%r，%o等打印的都是0，只有文件才有副本和大小
 ~~~
 
+
+
+#### 4.15 测试
+
+~~~sh
+hdfs dfs [generic options] -test -[defsz] <path> 
+# 参数说明：
+-e:文件是否存在，存在返回0
+-z:文件是否为空，为空返回0
+-d:是否是路径（目录），是返回0
+# 如下，存在则返回OK
+[root@ben01 ~]# hdfs dfs -test -e /data/test.txt && echo "OK" || echo "NO"
+OK
+# 已知道没有test111.txt这个文件
+[root@ben01 ~]# hdfs dfs -test -e /data/test111.txt && echo "OK" || echo "NO"
+NO
+~~~
+
