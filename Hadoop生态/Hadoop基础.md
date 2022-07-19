@@ -883,3 +883,25 @@ Replication 5 set: /data/test.txt
 # 之前data下的test.txt的Replication会从3刷新后变成5
 ~~~
 
+
+
+#### 4.14 查看文件的状态
+
+~~~sh
+[root@ben01 ~]# hdfs dfs -stat %b /data/test.txt
+11
+
+# 调用格式：hdfs dfs -stat [format] 文件路径
+%b: 打印文件大小（目录大小为0）
+%n: 打印文件名
+%o: 打印block的size
+%r: 打印副本数
+%y: utc时间 yyyy-MM-dd HH:mm:ss
+%Y: 打印自1970年1月1日至今的utc微秒数
+%P: 目录打印directory，文件打印regular file
+
+# 注意：
+1）当使用-stat命令但不指定format时，只打印创建时间，相当于%y
+2）-stat后面只跟目录，%r，%o等打印的都是0，只有文件才有副本和大小
+~~~
+
