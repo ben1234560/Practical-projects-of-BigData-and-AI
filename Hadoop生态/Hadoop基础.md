@@ -858,3 +858,17 @@ hdfs://ben01:8020  147.3 G  255.8 K    127.1 G    0%
 11  33  /data/test.txt
 ~~~
 
+
+
+#### 4.12 修改权限
+
+~~~sh
+[root@ben01 ~]# hdfs dfs -chmod 777 /data
+# 页面Permission的drwxr-xr-x刷新后会变为drwxrwxrwx
+# 也可以修改Owner和Group
+[root@ben01 ~]# hdfs dfs -chown ben:ben /data
+# 页面的Owner和Group会从root:supergroup 变为ben:ben
+# 再修改回来
+[root@ben01 ~]# hdfs dfs -chown root:supergroup /data
+~~~
+
