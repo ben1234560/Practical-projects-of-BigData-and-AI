@@ -794,3 +794,24 @@ HDFS是一个分布式文件系统，我们可以使用一些命令来操作这�
 ~~~
 
 > 效果图![1658207092361](assets/1658207092361.png)
+
+
+
+#### 3.7 合并下载
+
+~~~sh
+# 先创建几个文件
+[root@ben01 ~]# echo "Hello ben01" >> file1
+[root@ben01 ~]# echo "Hello ben02" >> file2
+[root@ben01 ~]# echo "Hello ben03" >> file3
+#上传file*文件
+[root@ben01 ~]# hdfs dfs -put file* /
+
+# 合并下载file下的文件到本地file下，
+[root@ben01 ~]# hdfs dfs -getmerge /file* ./file
+~~~
+
+> 效果图
+>
+> ![1658207398851](assets/1658207398851.png)
+
