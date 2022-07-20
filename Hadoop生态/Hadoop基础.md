@@ -1044,3 +1044,29 @@ HDFS块大小为什么为128MB
 	HDFS上的文件只能拥有一个写着，仅支持append操作，不支持多用户对同一文件的写操作，以及在文件任意位置进行修改。
 ~~~
 
+
+
+### 五 HDFS的体系结构
+
+#### 5.1 体系结构解析
+
+~~~
+HDFS采用的是master/slaves这种主从的结构模型来管理数据，主要由四个部分组成，分别是Client（客户端）、NameNode（名称节点）、DataNode（数据节点）和SecondaryNameNode。
+
+一般HDFS集群包括一个NameNode和若干个DataNode。
+
+NameNode是一个中心服务器，负责管理文件系统的命令空间（Namespace），它在内存中维护着命名空间的最新状态，同时对持久性文件（fsimage和edit）进行备份，防止宕机后数据丢失。NameNode还负责管理客户端对文件的访问，如权限验证等。
+
+集群中的DataNode一般是一个节点运行一个DataNode进程，真正负责管理客户端的读写请求，在NameNode的统一调度下进行数据块的创建、删除和复制等操作。数据块实际上都是保存在DataNode本地的Linux文件系统中。每个DataNode会定期的向NameNode发送数据，报告自己的状态（我们称之为心跳机制）。没有按时发送心跳信息的DataNode会被NameNode标记为“宕机”，不会在给它分配任何I/O请求。
+
+用户在使用Client进行I/O操作时，依然可以像使用普通文件系统那样，使用文件名去存储和访问文件，只不过在HDFS内部，一个文件会被切分成若干个数据块，并分布存储到若干个DataNode上。
+
+通过Client访问文件流程如下：
+客户端把文件名发送给NameNode——>NameNode根据文件名找到对应数据块信息及每个数据块所在DataNode位置——>把这些信息发送给客户端——>客户端直接与DataNode进行通信，获取数据。
+这种设计的好处在于实现并发访问，大大提高了数据的访问速度。
+
+HDFS集群中只有唯一的NameNode负责所有元数据的管理工作，这种方式保证了DataNode不会脱离NameNode的控制，同时用户数据也永远不会经过NameNode，大大减轻了NameNode的工作负担，使之更方便管理工作。通常在集群中，要选择一套性能较好的机器作为NameNode。当然一台机器可以运行多个DataNode或NameNode和DataNode放在同一机器，只不过实际部署中通常不会这么做。
+~~~
+
+![1658295144547](assets/1658295144547.png)
+
