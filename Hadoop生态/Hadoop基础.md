@@ -1105,3 +1105,41 @@ namenode会终止之前正在使用的edit文件，创建一个空的edit日志�
 >
 > 首次启动的Loading edits和Saving checkpoint都是空的
 
+
+
+#### 5.3 Secondary NameNode 工作机制
+
+Secondary NameNode 是HDFS集群中的重要组成部分，它可以辅助namenode进行fsimage和editlog的合并工作，减少editlog文件大小，以便缩短下次namenode的重启时间，能尽快退出安全模式。
+
+两个文件的合并周期，称之为检查点机制（checkpoint），是可以通过hdfs-default.xml配置文件进行修改的：
+
+~~~xml
+<property>
+	<name>dfs.namenode.checkpoint.period</name>
+	<value>3600</value>
+	<description> 两次检查点间隔的秒数，默认是1个小时 </description>
+</property>
+<property>
+ 	<name>dfs.namenode.checkpoint.txns</name>
+ 	<value>1000000</value>
+ 	<description>txid执行的次数达到100w次，也执行checkpoint</description>
+</property> 
+<property>
+ 	<name>dfs.namenode.checkpoint.check.period</name>
+ 	<value>60</value>
+ 	<description>60秒一次检查txid的执行次数</description>
+</property>
+~~~
+
+![1658299068573](assets/1658299068573.png)
+
+通过上图，可以总结如下：
+
+~~~
+1. SecondaryNameNode请求namenode停止使用正在编辑的editlog文件，namenode会创建新的editlog文件，同时更新seed_tixd文件。
+2. SecondaryNameNode通过HTTP协议获得namenode上的fsimage和editlog文件。
+3. SecondaryNameNode将fsimage读进内存当中，并逐步分析editlog文件里的数据，进行合并操作，然后写入新文件fsimage_x.ckpt文件中。
+4. SecondaryNameNode将新文件fsimage_x.ckpt通过HTTP协议发送回namenode。
+5. namenode再进行更名操作。
+~~~
+
