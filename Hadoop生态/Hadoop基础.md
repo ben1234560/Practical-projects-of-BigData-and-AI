@@ -1160,20 +1160,60 @@ Secondary NameNode 是HDFS集群中的重要组成部分，它可以辅助nameno
 
 ![1658299681037](assets/1658299681037.png)
 
-> ~~~
-> 1. 客户端通过调用FileSystem对象的open()方法来打开希望读取的文件，对于HDFS来说，这个对象是DistributedFileSystem，它通过使用远程过程调用（RPC）来调用namenode，以确定文件起始块的位置。
-> 
-> 2. 对于每个块，namenode返回有该块副本的datanode地址，并根据距离客户端的远近来排序。
-> 
-> 3. DistributedFileSystem实例会返回一个FSDataInputStream对象（支持文件定位功能）给客户端以便读取数据，接着客户端对这个输入流调用read() 方法。
-> 
-> 4. FSDataInputStream随即连接距离最近的文件中第一个块所在的datanode，通过对数据流反复调用read()方法，将数据从datanode传输到客户端。
-> 
-> 5. 当读取到块的末端时，FSInputStream关闭与该datanode的连接，然后寻找下一块最佳datanode
-> 
-> 6. 客户端从流中读取数据时，块是按照打开FSInputStream与datanode的新建连接的顺序读取。它也会根据需要询问namenode来检索下一批数据块的datanode位置。一旦客户端完成读取，就对FSInputStream调用close方法。
-> 
-> 注意：在读取数据的时候，如果FSInputStream与datanode通信时遇到错误，会尝试从这个块的最近的datanode读取数据，并且记住那个故障的datanode，保证后续不会反复读取该节点上后续的块。FSInputStream也会通过校验和确认从datanode发来的数据是否完整。如果发现有损坏的块，FSInputStream会从其它的块读取副本，并且将损坏的块通知给namenode。
-> ~~~
->
-> 
+~~~
+1. 客户端通过调用FileSystem对象的open()方法来打开希望读取的文件，对于HDFS来说，这个对象是DistributedFileSystem，它通过使用远程过程调用（RPC）来调用namenode，以确定文件起始块的位置。
+
+2. 对于每个块，namenode返回有该块副本的datanode地址，并根据距离客户端的远近来排序。
+
+3. DistributedFileSystem实例会返回一个FSDataInputStream对象（支持文件定位功能）给客户端以便读取数据，接着客户端对这个输入流调用read() 方法。
+
+4. FSDataInputStream随即连接距离最近的文件中第一个块所在的datanode，通过对数据流反复调用read()方法，将数据从datanode传输到客户端。
+
+5. 当读取到块的末端时，FSInputStream关闭与该datanode的连接，然后寻找下一块最佳datanode
+
+6. 客户端从流中读取数据时，块是按照打开FSInputStream与datanode的新建连接的顺序读取。它也会根据需要询问namenode来检索下一批数据块的datanode位置。一旦客户端完成读取，就对FSInputStream调用close方法。
+
+注意：在读取数据的时候，如果FSInputStream与datanode通信时遇到错误，会尝试从这个块的最近的datanode读取数据，并且记住那个故障的datanode，保证后续不会反复读取该节点上后续的块。FSInputStream也会通过校验和确认从datanode发来的数据是否完整。如果发现有损坏的块，FSInputStream会从其它的块读取副本，并且将损坏的块通知给namenode。
+~~~
+
+
+
+#### 6.2 写流程详解
+
+~~~
+写操作：
+	- hdfs dfs -put /file2 ./file2
+	- hdfs dfs -copyToLocal /file2 ./file2
+ 	- FSDataOutputStream fsout = fs.create(path); fsout.write(byte[])
+	- fs.copyFromLocal(path1,path2)
+~~~
+
+![1658382022692](assets/1658382022692.png)
+
+~~~
+1. 客户端通过对DistributedFileSystem对象调用create()方法来新建文件
+
+2. DistributedFileSystem对namenode创建一个RPC调用，在文件系统的命名空间中新建一个文件，此时该文件中还没有相应的数据块。
+
+3. namenode执行各种不同的检查，以确保这个文件不存在以及客户端有新建该文件的权限。如果检查通过，namenode就会为创建新文件记录一条事务记录（否则，文件创建失败并向客户端跑出一个IOException异常）。DistributedFileSystem向客户端返回一个FSDataOuputStream对象，由此客户端可以写入数据。
+
+4. 在客户端写入数据时，FSDataOuputStream将它分成一个个的数据包（packet），并写入一个内部队列，这个队列称为“数据队列”（data queue）。DataStreamer线程负责处理数据队列，它的责任是挑选合适存储数据复本的一组datanode，并以此来要去namenode分配新的数据块。这一组datanode将构成一个管道，以默认复本3个为例，所以该管道中有3个节点。DataStreamer将数据包流式传输到管道中第一个datanode，该datanode存储数据包，并将它发送到管道中的第2个datanode。同样，第2个datanode存储该数据包，并发送给管道中的第三个datanode。DataStreamer再将一个个packet流式传到第一个datanode节点后，还会将此packet从数据队列移动到另一个队列 确认队列（ask queue）中。
+
+5. datanode写入数据成功之后，会为ResponseProcessor线程发送一个写入成功的信息回执，当收到管道中所有的datanode确认信息后，ResponseProcessor线程会将该数据包从确认队列中删除。
+~~~
+
+如果任何datanode在写入期间发生故障，则执行以下操作：
+
+~~~~
+1. 首先关闭管道，把确认队列中的所有数据包添加回数据队列的最前端，以确保故障节点下游的datanode不会漏掉任何一个数据包。
+
+2. 为存储在另一个正常datanode的当前数据块制定一个新标识，并将该标识传送给namenode，以便故障datanode在恢复后可以删除存储的部分数据块。
+
+3. 从管道中删除故障datanode，基于两个正常datanode构建一条新管道，余下数据块写入管道中正常的datanode。
+
+4. namenode注意到块复本不足时，会在一个新的datanode节点上创建一个新的复本。
+
+注意：一个块被写入期间可能会有多个datanode同时发生故障，但概率非常低。只要写入了。
+dfs.namenode.replication.min的复本数（默认1），写操作就会成功，并且这个块可以在集群中异步复制，直到达到其目标复本数dfs.replication的数量（默认3）
+~~~~
+
