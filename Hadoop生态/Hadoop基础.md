@@ -109,6 +109,11 @@ Hadoop3.0新扩展的两个模块：
 | Hadoop         | hadoop-3.3.1.tar.gz                                          |
 | 用户           | root                                                         |
 
+> 上述软件包可通过百度云下载：
+>
+> 链接：https://pan.baidu.com/s/1UZABuNRtoPzjrrc73r26Yw?pwd=d0ni 
+> 提取码：d0ni 
+
 
 
 #### 2.2 安装JDK
