@@ -1143,3 +1143,37 @@ Secondary NameNode 是HDFS集群中的重要组成部分，它可以辅助nameno
 5. namenode再进行更名操作。
 ~~~
 
+
+
+### 六 HDFS的读写流程
+
+#### 6.1 读流程详解
+
+~~~
+读操作：
+	- hdfs dfs -get /file2 ./file2
+	- hdfs dfs -copyToLocal /file2 ./file2
+ 	- FSDataInputStream fsis = fs.open("/input/a.txt");
+ 	- fsis.read(byte[] a)
+ 	- fs.copyToLocal(path1,path2)
+~~~
+
+![1658299681037](assets/1658299681037.png)
+
+> ~~~
+> 1. 客户端通过调用FileSystem对象的open()方法来打开希望读取的文件，对于HDFS来说，这个对象是DistributedFileSystem，它通过使用远程过程调用（RPC）来调用namenode，以确定文件起始块的位置。
+> 
+> 2. 对于每个块，namenode返回有该块副本的datanode地址，并根据距离客户端的远近来排序。
+> 
+> 3. DistributedFileSystem实例会返回一个FSDataInputStream对象（支持文件定位功能）给客户端以便读取数据，接着客户端对这个输入流调用read() 方法。
+> 
+> 4. FSDataInputStream随即连接距离最近的文件中第一个块所在的datanode，通过对数据流反复调用read()方法，将数据从datanode传输到客户端。
+> 
+> 5. 当读取到块的末端时，FSInputStream关闭与该datanode的连接，然后寻找下一块最佳datanode
+> 
+> 6. 客户端从流中读取数据时，块是按照打开FSInputStream与datanode的新建连接的顺序读取。它也会根据需要询问namenode来检索下一批数据块的datanode位置。一旦客户端完成读取，就对FSInputStream调用close方法。
+> 
+> 注意：在读取数据的时候，如果FSInputStream与datanode通信时遇到错误，会尝试从这个块的最近的datanode读取数据，并且记住那个故障的datanode，保证后续不会反复读取该节点上后续的块。FSInputStream也会通过校验和确认从datanode发来的数据是否完整。如果发现有损坏的块，FSInputStream会从其它的块读取副本，并且将损坏的块通知给namenode。
+> ~~~
+>
+> 
