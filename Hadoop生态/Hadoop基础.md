@@ -1,4 +1,4 @@
-Hadoop基础
+# Hadoop基础
 
 ### 一. Hadoop概述
 
@@ -1256,4 +1256,31 @@ Zookeeper的数据模型采用的与Unix文件系统类似的层次化的树形�
 
 > - Zookeeper 被设计用来实现协调服务（这类服务通常使用小数据文件），而不是用于大容量数据存储，因此一个znode能存储的数据被限制在1MB以内。
 > - 每个znode都可以通过其路径唯一标识。
+
+
+
+#### 7.4 Zookeeper的应用场景
+
+1. 统一配置管理
+2. 统一集群管理
+3. 服务器节点动态上下线感知
+4. 软负载均衡
+5. 分布式锁
+6. 分布式队列
+
+
+
+### 八. Zookeeper的安装
+
+#### 8.1 安装与环境变量的配置
+
+~~~sh
+# 1. 将Zookeeper-3.4.10.tar.gz上传到/root中
+# 2. 解压
+[root@ben01 softwares]# tar -zxvf zookeeper-3.4.10.tar.gz -C /opt/apps/
+# 3. 更名
+ [root@ben01 ~]# cd /opt/apps/
+ [root@ben01 local]# mv zookeeper-3.4.10 zookeeper
+ 
+~~~
 
