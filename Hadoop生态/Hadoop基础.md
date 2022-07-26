@@ -1478,3 +1478,49 @@ YARN被引入Hadoop2，最初是为了改善MapReduce的实现，但因其足够
 
 ![1658820940897](assets/1658820940897.png)
 
+
+
+### 十一. YARN的架构及组件
+
+#### 11.1 MapReduce 1.x的简介
+
+第一代Hadoop，由分布式存储系统hdfs和分布式计算框架MapReduce组成，其中，hdfs由一个NameNode和多个DataNode组成，MapReduce由一个JobTracker和多个TaskTracker组成，对应Hadoop版本为Hadoop 1.x和0.21.x，0.22.x。
+
+1）MapReduce 1 的角色
+
+~~~
+-- 1.Client：作业提交发起者
+-- 2.JobTracker：初始化作业，分配作业，与TackTracker通信，协调整个作业。
+-- 3.TaskTracker：保持JobTracker通信，在分配的数据片段上执行MapReduce任务。
+~~~
+
+![1658821617982](assets/1658821617982.png)
+
+2）MapReduce执行流程
+
+![1658821646593](assets/1658821646593.png)
+
+> ~~~
+> 步骤1 提交作业
+> 	编写MapReduce程序代码，创建job对象，并进行配置，比如输入和输出路径，压缩格式等，然后通过JobClient来提交作业。
+>     
+> 步骤2	作业的初始化
+> 	客户提交完成后，JobTracker会将作业加入队列，然后进行调度，默认的调度方法是FIFO调试方法。
+> 	
+> 步骤3	任务的分配
+> 	TaskTracker和JobTracker之间的通信与任务的分配是通过心跳机制完成的。
+> 	TaskTracker会主动向JobTracker询问是否有作业要做，如果自己可以做，那么就会申请到作业任务，这个任务可以是MapTask也可以是ReduceTask。
+> 	
+> 步骤4 任务的执行
+> 	申请到后，TaskTracker会做如下事情：
+> 	- 1.拷贝代码到本地	
+> 	- 2.拷贝任务的信息到本地
+> 	- 3.启动JVM运行任务
+> 
+> 步骤5 状态与任务的更新
+> 	任务在运行过程中，首先会将自己的状态汇报给TaskTracker，然后由TaskTracker汇总给JobTracker。任务进度是通过计数器来实现的。
+> 	
+> 步骤6 作业的完成
+> 	JobTracker是在接受到最后一个任务运行完成后，才会将任务标记为成功，此时会做删除中间结果等善后工作。
+> ~~~
+
