@@ -1277,10 +1277,21 @@ Zookeeper的数据模型采用的与Unix文件系统类似的层次化的树形�
 ~~~sh
 # 1. 将Zookeeper-3.4.10.tar.gz上传到/root中
 # 2. 解压
-[root@ben01 softwares]# tar -zxvf zookeeper-3.4.10.tar.gz -C /opt/apps/
+[root@ben01 softwares]# tar -zxvf zookeeper-3.4.10.tar.gz -C /usr/local
 # 3. 更名
- [root@ben01 ~]# cd /opt/apps/
- [root@ben01 local]# mv zookeeper-3.4.10 zookeeper
- 
+[root@ben01 ~]# cd /usr/local
+[root@ben01 local]# mv zookeeper-3.4.10 zookeeper
+# 4. 配置环境变量
+[root@ben01 local]# vi /etc/profile
+......
+#zk environment
+export ZOOKEEPER_HOME=/usr/local/zookeeper
+export PATH=$ZOOKEEPER_HOME/bin:$PATH
+# 5. 使得当前会话生效
+[root@ben01 local]# source /etc/profile
+# 6. 检测是否生效
+# 配置成功后，tab键可补全zk，有zk相关脚本提示即可。
 ~~~
+
+
 
