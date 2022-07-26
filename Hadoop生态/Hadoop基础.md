@@ -1343,3 +1343,34 @@ port2：选举期间使用的port
 [root@ben01 zkData]# echo "1" >> myid
 ~~~
 
+8.2.4 搭建其它两台server节点的环境
+
+1）使用scp命令将zk环境复制到ben02、ben03中
+
+~~~sh
+[root@ben01 zkData]# cd /usr/local/
+[root@ben01 local]# scp -r zookeeper ben02:/usr/local/
+[root@ben01 local]# scp -r zookeeper ben03:/usr/local/
+~~~
+
+2）使用scp命令拷贝/etc/profile到两台机器上
+
+~~~sh
+[root@ben01 local]# scp /etc/profile ben02:/etc/
+[root@ben01 local]# scp /etc/profile ben03:/etc/
+~~~
+
+3）source，并修改ben02的myid文件为2
+
+~~~sh
+[root@ben02 ~]# source /etc/profile
+[root@ben02 ~]# echo "2" > /usr/local/zookeeper/zkData/myid
+~~~
+
+4）source，并修改ben02的myid文件为3
+
+~~~sh
+[root@ben03 ~]# source /etc/profile
+[root@ben03 ~]# echo "3" > /usr/local/zookeeper/zkData/myi
+~~~
+
