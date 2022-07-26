@@ -1466,3 +1466,15 @@ Mode: follower
 | quit   | 退出客户端                                                   |                                                 |
 | help   | 帮助命令                                                     |                                                 |
 
+
+
+### 十. YARN的概述
+
+为了克服Hadoop  1.x中HDFS和MapReduce存在的各种问题而提出的，针对Hadoop1.x中的MapReduce在扩展性和多框架支持方面的不足，提出了全选的资源管理框架YARN。
+
+Apache YARN是Hadoop集群的资源管理系统，负责为计算程序提供服务器计算资源，相当于一个分布式的操作系统平台，而MapReduce等计算程序则相当于操作系统之上的应用程序。
+
+YARN被引入Hadoop2，最初是为了改善MapReduce的实现，但因其足够的通用性，又支持其他的分布式计算模式，如Spark、Tez等结算框架，逐渐取代原有MapReduce的位置，MapReduce进行了完全重构，发生了根本上的改变，是运行在YARN之上的分布式应用程序。
+
+![1658820940897](assets/1658820940897.png)
+
