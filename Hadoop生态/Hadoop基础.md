@@ -1333,7 +1333,18 @@ port1：follower与leader交互的port
 port2：选举期间使用的port
 ~~~
 
-> ![1658804268916](assets/1658804268916.png)
+> ~~~sh
+> [root@ben01 conf]# cat zoo.cfg 
+> tickTime=2000
+> initLimit=10
+> syncLimit=5
+> dataDir=/usr/local/zookeeper/zkData
+> clientPort=2181
+> server.1=ben01:2888:3888        
+> server.2=ben02:2888:3888
+> server.3=ben03:2888:3888
+> 
+> ~~~
 
 8.2.3 添加myid
 
@@ -1371,6 +1382,72 @@ port2：选举期间使用的port
 
 ~~~sh
 [root@ben03 ~]# source /etc/profile
-[root@ben03 ~]# echo "3" > /usr/local/zookeeper/zkData/myi
+[root@ben03 ~]# echo "3" > /usr/local/zookeeper/zkData/myid
+~~~
+
+8.2.5 启动zk
+
+1）三台机器上都启动zk（防火墙需是关闭状态）
+
+~~~sh
+[root@ben01 local]# zkServer.sh start
+ZooKeeper JMX enabled by default
+Using config: /usr/local/zookeeper/bin/../conf/zoo.cfg
+Starting zookeeper ... STARTED
+# 此时查看状态提示还没运行起来
+[root@ben01 local]# zkServer.sh status
+ZooKeeper JMX enabled by default
+Using config: /usr/local/zookeeper/bin/../conf/zoo.cfg
+Error contacting service. It is probably not running.
+# 查看jps，已经能看到QuorumPeerMain了，说明启动了，但由于zk是三节点，最低要求有半数以上的节点可用，所以还需启动ben02上的zk
+[root@ben01 local]# jps
+801 Jps
+22898 ResourceManager
+22281 DataNode
+23100 NodeManager
+22078 NameNode
+719 QuorumPeerMain
+
+[root@ben02 ~]# zkServer.sh start
+ZooKeeper JMX enabled by default
+Using config: /usr/local/zookeeper/bin/../conf/zoo.cfg
+Starting zookeeper ... STARTED
+# 可以看到状态是已经成功的
+[root@ben02 ~]# zkServer.sh status
+ZooKeeper JMX enabled by default
+Using config: /usr/local/zookeeper/bin/../conf/zoo.cfg
+Mode: leader
+[root@ben02 ~]# jps
+21762 NodeManager
+21330 DataNode
+2565 Jps
+1958 QuorumPeerMain
+21535 SecondaryNameNode
+
+
+[root@ben03 ~]# zkServer.sh start
+ZooKeeper JMX enabled by default
+Using config: /usr/local/zookeeper/bin/../conf/zoo.cfg
+Starting zookeeper ... STARTED
+[root@ben03 ~]# zkServer.sh status
+ZooKeeper JMX enabled by default
+Using config: /usr/local/zookeeper/bin/../conf/zoo.cfg
+Mode: follower
+[root@ben03 ~]# jps
+19713 Jps
+21619 DataNode
+21929 NodeManager
+2319 QuorumPeerMain
+~~~
+
+2）启动客户端（ben01）
+
+~~~sh
+[root@ben01 local]# zkCli.sh
+[zk: localhost:2181(CONNECTED) 0] ls
+[zk: localhost:2181(CONNECTED) 1] quit
+# 退出，连到指定的zk机器
+[root@ben01 local]# zkCli.sh -server ben02:2181
+[zk: ben02:2181(CONNECTED) 0] quit
 ~~~
 
