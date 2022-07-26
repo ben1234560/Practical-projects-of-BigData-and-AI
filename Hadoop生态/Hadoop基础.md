@@ -1451,3 +1451,18 @@ Mode: follower
 [zk: ben02:2181(CONNECTED) 0] quit
 ~~~
 
+
+
+### 九. Zookeeper的shell操作
+
+| 命令   | 描述                                                         | 示例                                            |
+| ------ | ------------------------------------------------------------ | ----------------------------------------------- |
+| ls     | 查看某个目录包含的所有文件                                   | ls /                                            |
+| ls2    | 查看某个目录包含的所有文件，与ls不同的是它查看到time、version等信息 | ls2 /                                           |
+| create | 修改znode，并需要设置初始内容                                | create /test "test"<br />create -e /test "test" |
+| get    | 获取znode的数据                                              | get /test                                       |
+| set    | 修改znode的内容                                              | set /test "test2"                               |
+| delete | 删除znode                                                    | delete /test                                    |
+| quit   | 退出客户端                                                   |                                                 |
+| help   | 帮助命令                                                     |                                                 |
+
