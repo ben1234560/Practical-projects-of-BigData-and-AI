@@ -1524,3 +1524,34 @@ YARN被引入Hadoop2，最初是为了改善MapReduce的实现，但因其足够
 > 	JobTracker是在接受到最后一个任务运行完成后，才会将任务标记为成功，此时会做删除中间结果等善后工作。
 > ~~~
 
+
+
+#### 11.2 YARN的设计思想
+
+YARN的基本思想是将资源管理和作业调度/监控功能划分为单独的守护进程。其思想是拥有一个全局ResourceManager（RM），以及每个应用程序拥有一个ApplicationMaster（AM）。应用程序可以是单个作业，也可以是一组作业
+
+![1658823164088](assets/1658823164088.png)
+
+一个ResourceManager和多个NodeManager构成了yarn资源管理框架。他们是yarn启动后长期运行的守护进程，来提供核心服务。
+
+~~~
+ResourceManager 是在系统中的所有应用程序之间仲裁资源的最终权威，即管理整个集群上的所有资源分配，内部含有一个Scheduler（资源调度器）
+
+NodeManager 是每台机器的资源管理器，也就是单个节点的管理者，负责启动和监视容器（container）资源使用情况，并向ResourceManager及其Scheduler报告使用情况
+
+Container 是集群上的可用资源，包含cpu、内存、磁盘、网络等
+
+ApplicationMaster（AM） 实际上是框架的特定库，每启动一个应用程序，都会启动一个AM，它的任务是与ResourceManager协商资源，并与NodeManager一起执行和监视任务。
+~~~
+
+扩展）YARN与MapReduce 1的比较
+
+| MapReduce 1 | YARN                                                  |
+| ----------- | ----------------------------------------------------- |
+| Jobtracker  | Resource manager, application master, timeline server |
+| Tasktracker | Node manager                                          |
+| Slot        | Container                                             |
+
+
+
+11.3 Y
