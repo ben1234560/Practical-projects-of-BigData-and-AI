@@ -1335,3 +1335,11 @@ port2：选举期间使用的port
 
 > ![1658804268916](assets/1658804268916.png)
 
+8.2.3 添加myid
+
+~~~sh
+# $ZOOKEEPER_HOME/zkData目录下添加myid文件，内容为server的id号
+[root@ben01 zookeeper]# cd /usr/local/zookeeper/zkData
+[root@ben01 zkData]# echo "1" >> myid
+~~~
+
