@@ -1295,7 +1295,9 @@ export PATH=$ZOOKEEPER_HOME/bin:$PATH
 
 
 
-#### 8.1 Zookeeper的服务进程布局
+#### 8.2 集群模式的配置
+
+8.2.1 Zookeeper的服务进程布局
 
 ~~~
 ben01	QuorumPeerMain
@@ -1303,5 +1305,33 @@ ben02	QuorumPeerMain
 ben03	QuorumPeerMain
 ~~~
 
+8.2.2 修改zoo.cfg文件
 
+~~~sh
+[root@ben01 local]# cd ./zookeeper/conf/
+[root@ben01 conf]# cp zoo_sample.cfg zoo.cfg
+# 修改存储路径（需要创建）并添加三个服务节点
+[root@ben01 conf]# vim zoo.cfg
+tickTime=2000	# 定义时间单元（单位毫秒），下面的两个值都是tickTime的倍数
+initLimit=10	# follower连接并同步leader的初始化事件
+syncLimit=5		# 心跳机制的时间（正常情况下的请求和应答的时间）
+dataDir=/usr/local/zookeeper/zkData	# 修改zk的存储路径，需要创建zkData目录
+clientPort=2181		# 客户端连接服务器的port
+server.1=ben01:2888:3888	# 添加三个服务器节点
+server.2=ben02:2888:3888
+server.3=ben03:2888:3888
+
+# 保存并退出
+[root@ben01 conf]# mkdir ../zkData
+[root@ben01 conf]# ll /usr/local/zookeeper/zkData
+总用量 0
+
+# 解析Server.id=ip:port1:port2
+id：服务器的id号，对应zkData/myid文件内的数字
+ip：服务器的ip地址
+port1：follower与leader交互的port
+port2：选举期间使用的port
+~~~
+
+> ![1658804268916](assets/1658804268916.png)
 
