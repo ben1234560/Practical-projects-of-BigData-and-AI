@@ -1295,3 +1295,13 @@ export PATH=$ZOOKEEPER_HOME/bin:$PATH
 
 
 
+#### 8.1 Zookeeper的服务进程布局
+
+~~~
+ben01	QuorumPeerMain
+ben02	QuorumPeerMain
+ben03	QuorumPeerMain
+~~~
+
+
+
