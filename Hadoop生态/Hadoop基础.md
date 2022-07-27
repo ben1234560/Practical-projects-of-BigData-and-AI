@@ -1749,8 +1749,8 @@ less 或 tail -1000 $HADOOP_HOME/logs/yarn-{user.name}-{jobname}-{hostname}.log
 [root@ben01 ~]# zkServer.sh stop
 [root@ben02 ~]# zkServer.sh stop
 [root@ben03 ~]# zkServer.sh stop
-[root@ben01 ~]# stop-all.sh 
 [root@ben01 ~]# mapred --daemon stop historyserver
+[root@ben01 ~]# stop-all.sh 
 [root@ben01 ~]# jps
 32672 Jps
 
@@ -1775,9 +1775,36 @@ less 或 tail -1000 $HADOOP_HOME/logs/yarn-{user.name}-{jobname}-{hostname}.log
 
 ### 十二. YARN的执行原理
 
-在MR
+在MR程序运行时，有五个独立的进程：
 
+~~~sh
+-- YarnRunner：用于提交作业的客户端程序
+-- ResourceManager：yarn资源管理器，负责协调集群上计算机资源的分配
+-- NodeManager：yarn节点管理器，负责启动和监视集群中机器上的计算容器（container）
+-- Application Master：负责协调运行MapReduce作业的任务，它和任务都在容器中运行，这些容器由资源管理器分配并由节点管理器进行管理。
+-- HDFS：用于共享作业所需文件。
+~~~
 
+整个过程如下图描述：
+
+![1658887440421](assets/1658887440421.png)
+
+> ~~~sh
+> 1. 调用waitForCompletion方法每秒轮询作业的进度，内部封装了submit()方法，用于创建JobCommiter实例，并且调用其的submitJobInternal方法。提交成功后，如果有状态改变，就会把进度报告到控制台。错误也会报告到控制台。
+> 2. JobCommiter实例会向ResourceManager申请一个新应用ID，用于MapReduce作业ID。这期间JobCommiter也会进行检查输出路径的情况，以及计算输入分片。
+> 3. 如果成功申请到ID，就会将运行作业所需要的资源（包括作业jar文件，配置文件和计算所得的输入分片元数据文件）上传到一个用ID命令目录下HDFS上。此时副本个数是10。
+> 4. 准备工作已做好，再通知ResourceManager调用submitApplication方法提交作业。
+> 5. ResourceManager调用submitApplication方法后，会通知Yarn调度器（Scheduler），调度器分配一个容器，在节点管理器的管理下在容器中启动 application master进程。
+> 6. application master的主类是MRAppMaster，其主要作用是初始化任务，并接受来来自任务的进度和完成报告。
+> 7. 然后从HDFS上接受资源，主要是split。然后为每一个split创建MapTask以及参数指定的ReduceTask，任务ID在此时分配。
+> 8. 然后Application Master会向资源管理器请求容器，首先为MapTask申请容器，然后再为ReduceTask申请容器。（5%）
+> 9. 一旦ResourceManager中的调度器（Scheduler），为Task分配了一个特定节点上的容器，Application Master就会与NodeManager进行通信来启动容器。
+> 10. 运行任务是由YarnChild来执行的，运行任务前，先将资源本地化（jar文件，配置文件，缓存文件）
+> 11. 然后开始运行MapTask或ReduceTask。
+> 12. 当收到最后一个任务已经完成通知后，application master会把作业状态设置为success。然后Job轮询时，知道成功完成，就会通知客户端，并把统计信息输出到控制台。
+> ~~~
+>
+> 
 
 ### 十三. YARN的案例测试
 
