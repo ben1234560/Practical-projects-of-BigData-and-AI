@@ -52,3 +52,45 @@ hive是构建在Hadoop上的数据仓库工具（框架），可以将结构化�
   - hive自动生成的MapReduce作业，通常情况下不够智能化
   - hive调优比较苦难，粒度较粗
 
+
+
+### 二. Hive架构和原理
+
+#### 2.1 hive的架构简介
+
+![1658901008483](assets/1658901008483.png)
+
+从上图可以看出，Hive的体系结构分位以下几部分：
+
+~~~
+1. 用户连接接口
+	CLI：指Shell命令行。
+	JDBC/ODBC：指Hive的java实现，与传统数据库JDBC类似。
+	WebUI：指可通过浏览器访问Hive。
+2. Thrift Server：
+	hive的可选组件，是一个软件框架服务，允许客户端使用包括Java、C++、Ruby和其它多种语言，通过编程的方式远程访问Hive。
+3. Meta Store
+	Hive将元数据存储在数据库中，如mysql、derby。hive中的元数据包括（表名、表所属的数据库表名、表的拥有者、列/分区字段、表的类型（是否是外部表）、表的数据所在目录等）
+4. 驱动器（Driver）
+	- 解析器（SQLParser）：
+	  将HQL字符串转换成抽象语法树AST，这一步一般都用第三方工具库完成，比如antlr；对AST进行语法分析，比如表是否存在、字段是否存在、SQL语义是否有误。
+	- 编译器（Compiler）：
+	  对hql语句进行词法、语法、语义的编译（需要跟元数据关联），编译完成后会生成一个执行计划。hive上就是编译成MapReduce的job。
+	- 优化器（Optimizer）：
+	  将执行计划进行优化，减少不必要的列、使用分区、使用索引等，优化job。
+    - 执行器（Executer）：
+      将优化后的执行计划提交给hadoop的yarn上执行。提交job。
+5.hadoop
+	Jobtracker是hadoop1.x中的组件，它的功能相当于：Resourcemanager+AppMaster
+	TaskTracker相当于：Nodemanager+yarnchild
+	
+	Hive的数据存储在HDFS中，大部分的插叙、计算由MapReduce完成
+~~~
+
+注意：
+
+~~~~
+- 包含*的全表查询，比如select * from table 不会生成MapReduce任务
+- 包含*的limit查询，比如select * from table limit 10 不会生成MapReduce任务
+~~~~
+
