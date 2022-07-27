@@ -409,20 +409,33 @@ yarn-site.xml
 ~~~xml
 [root@ben01 hadoop]# vim mapred-site.xml
 <configuration>
-        <!--指定mapreduce使用yarn资源管理器-->
+        <!--用于执行MapReduce作业运行时的框架-->
         <property>
                  <name>mapreduce.framework.name</name>
                  <value>yarn</value>
         </property>
-        <!--配置作业历史服务器的地址-->
+        <!--历史任务的内部通讯地址-->
         <property>
                 <name>mapreduce.jobhistory.address</name>
                 <value>ben01:10020</value>
         </property>
-        <!-- 配置作业历史服务器的http地址 -->
+        <!--历史任务的外部监听页面-->
         <property>
                 <name>mapreduce.jobhistory.webapp.address</name>
                 <value>ben01:19888</value>
+        </property>
+        <!-- 下面的需要配置,否则报错:找不到AppMaster -->
+        <property>
+                <name>yarn.app.mapreduce.am.env</name>
+                <value>HADOOP_MAPRED_HOME=/usr/local/hadoop</value>
+        </property>
+        <property>
+                <name>mapreduce.map.env</name>
+                <value>HADOOP_MAPRED_HOME=/usr/local/hadoop</value>
+        </property>
+        <property>
+                <name>mapreduce.reduce.env</name>
+                <value>HADOOP_MAPRED_HOME=/usr/local/hadoop</value>
         </property>
 </configuration>
 ~~~
@@ -1554,4 +1567,331 @@ ApplicationMaster（AM） 实际上是框架的特定库，每启动一个应用
 
 
 
-11.3 Y
+#### 11.3 YARN的配置
+
+YARN属于Hadoop的一个组件，不需要再单独安装程序，Hadoop中已存在配置文件的设置，本身就是一个集群，有主节点和从节点。
+
+~~~
+注意<value></value>之间的值不能有空格
+~~~
+
+在mapred-site.xml中的配置如下：
+
+> 无需再配
+
+~~~xml
+<configuration>
+        <!--用于执行MapReduce作业运行时的框架-->
+        <property>
+                 <name>mapreduce.framework.name</name>
+                 <value>yarn</value>
+        </property>
+        <!--历史任务的内部通讯地址-->
+        <property>
+                <name>mapreduce.jobhistory.address</name>
+                <value>ben01:10020</value>
+        </property>
+        <!--历史任务的外部监听页面-->
+        <property>
+                <name>mapreduce.jobhistory.webapp.address</name>
+                <value>ben01:19888</value>
+        </property>
+        <!-- 下面的需要配置,否则报错:找不到AppMaster -->
+        <property>
+                <name>yarn.app.mapreduce.am.env</name>
+                <value>HADOOP_MAPRED_HOME=/usr/local/hadoop</value>
+        </property>
+        <property>
+                <name>mapreduce.map.env</name>
+                <value>HADOOP_MAPRED_HOME=/usr/local/hadoop</value>
+        </property>
+        <property>
+                <name>mapreduce.reduce.env</name>
+                <value>HADOOP_MAPRED_HOME=/usr/local/hadoop</value>
+        </property>
+</configuration>
+~~~
+
+在yarn-site.xml中的配置如下：
+
+> 无需再配
+
+~~~xml
+<configuration>
+
+<!-- Site specific YARN configuration properties -->
+        <!-- 指定yarn的shuffle技术 -->
+        <property>
+                <name>yarn.nodemanager.aux-services</name>
+                <value>mapreduce_shuffle</value>
+        </property>
+        <!-- 指定resourcemanager的主机名 -->
+        <property>
+                <name>yarn.resourcemanager.hostname</name>
+                <value>ben01</value>
+        </property>
+        <!--指定shuffle对应的类-->
+        <property>
+                <name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
+                <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+        </property>
+
+        <!--配置resourcemanager的内部通讯地址 -->
+        <property>
+                <name>yarn.resourcemanager.address</name>
+                <value>ben01:8032</value>
+        </property>
+        <!--配置resourcemanager的scheduler内部通讯地址 -->
+        <property>
+                <name>yarn.resourcemanager.scheduler.address</name>
+                <value>ben01:8030</value>
+        </property>
+    <!--配置resoucemanager的资源调度的内部通讯地址-->
+        <property>
+                <name>yarn.resourcemanager.resource-tracker.address</name>
+                <value>ben01:8031</value>
+        </property>
+        <!--配置resourcemanager的管理员的内部通讯地址-->
+        <property>
+                <name>yarn.resourcemanager.admin.address</name>
+                <value>ben01:8033</value>
+        </property>
+        <!--配置resourcemanager的web ui 的监控页面-->
+        <property>
+                <name>yarn.resourcemanager.webapp.address</name>
+                <value>ben01:8088</value>
+        </property>
+</configuration>
+~~~
+
+1）日志位置
+
+~~~sh
+jps：当启动进程时出错后的解决步骤
+
+如果是hdfs上的问题，则查看对应的日志
+less 或 tail -1000 $HADOOP_HOME/logs/hadoop-{user.name}-{jobname}-{hostname}.log
+如果是yarn则查看
+less 或 tail -1000 $HADOOP_HOME/logs/yarn-{user.name}-{jobname}-{hostname}.log
+~~~
+
+2）历史服务
+
+~~~sh
+如果需要查看YARN作业历史，需要打开历史服务：
+# 1.先停止当前YARN进程
+[root@ben01 ~]# jps
+22898 ResourceManager
+20324 Jps
+22281 DataNode
+23100 NodeManager
+22078 NameNode
+719 QuorumPeerMain
+
+[root@ben01 ~]# stop-yarn.sh
+[root@ben01 ~]# jps
+26176 Jps
+22281 DataNode
+22078 NameNode
+719 QuorumPeerMain
+# 可以看到有关yarn的服务都停了，如Nodemanager、ResourceManager，另外两台机器也可以看到Nodemanager已关闭。
+
+# 2.打开并添加配置
+[root@ben01 ~]# cd /usr/local/hadoop/etc/hadoop/
+[root@ben01 hadoop]# vim yarn-site.xml 
+<configuration>
+......
+<!-- 开启日志聚集功能 -->
+<property>
+	<name>yarn.log-aggregation-enable</name>
+ 	<value>true</value>
+</property>
+<!-- 日志信息报错在文件系统上的最长时间，单位为秒 -->
+<property>
+ 	<name>yarn.log-aggregation.retain-seconds</name>
+ 	<value>640800</value>
+</property>
+</configuration>
+
+# 3.分发到其它节点
+[root@ben01 hadoop]# scp yarn-site.xml ben02:$PWD
+[root@ben01 hadoop]# scp yarn-site.xml ben03:$PWD
+
+# 4.启动YARN进程
+[root@ben01 hadoop]# start-yarn.sh
+[root@ben01 hadoop]# jps
+20336 ResourceManager
+20547 NodeManager
+22772 Jps
+22281 DataNode
+22078 NameNode
+719 QuorumPeerMain
+
+# 5.开启历史服务
+[root@ben01 hadoop]# mapred --daemon start historyserver
+[root@ben01 hadoop]# jps
+20336 ResourceManager
+32672 Jps
+20547 NodeManager
+22281 DataNode
+26381 JobHistoryServer
+22078 NameNode
+719 QuorumPeerMain
+# 可以看到JobHistoryServer已经有了
+~~~
+
+
+
+### 十二. YARN的执行原理
+
+在MR
+
+
+
+**这个阶段关机重启需要做的操作**
+
+~~~sh
+# 关机前需要关闭的服务，zk（zk需要三台机器都操作）、hadoop、作业任务
+[root@ben01 ~]# zkServer.sh stop
+[root@ben02 ~]# zkServer.sh stop
+[root@ben03 ~]# zkServer.sh stop
+[root@ben01 ~]# stop-all.sh 
+[root@ben01 ~]# mapred --daemon stop historyserver
+[root@ben01 ~]# jps
+32672 Jps
+
+# 开机需要开启的服务
+[root@ben01 ~]# start-all.sh
+# 此时查看三台机器的jps可以看到服务启动的内容
+[root@ben01 ~]# zkServer.sh start
+[root@ben02 ~]# zkServer.sh start
+[root@ben03 ~]# zkServer.sh start
+[root@ben01 ~]# mapred --daemon start historyserver
+[root@ben01 ~]# jps
+19507 Jps
+13193 DataNode
+14012 NodeManager
+15724 QuorumPeerMain
+12972 NameNode
+13821 ResourceManager
+19343 JobHistoryServer
+~~~
+
+
+
+
+
+### 十三. YARN的案例测试
+
+使用官方提供的
+
+~~~sh
+# 1.创建一个内容
+[root@ben01 ~]# ls
+e1  empty  file  file1  file2  file3  softwares  test.txt
+[root@ben01 ~]# mkdir input 
+[root@ben01 ~]# mv file* input/
+[root@ben01 ~]# cat input/*
+Hello ben01
+Hello ben02
+Hello ben03
+Hello ben01
+Hello ben02
+Hello ben03
+
+# 2.将文件夹put到hdfs上
+[root@ben01 ~]# hdfs dfs -put input/ /
+[root@ben01 ~]# hdfs dfs -cat /input/*
+
+# 3.官方案例
+[root@ben01 ~]# cd /usr/local/hadoop/share/hadoop/mapreduce
+
+# 4.运行
+[root@ben01 mapreduce]# hadoop jar hadoop-mapreduce-examples-3.3.1.jar wordcount /input /output
+~~~
+
+> 输入内容如下：
+>
+> ~~~sh
+> [root@ben01 mapreduce]# hadoop jar hadoop-mapreduce-examples-3.3.1.jar wordcount /input /output
+> 2022-07-27 09:38:32,446 INFO client.DefaultNoHARMFailoverProxyProvider: Connecting to ResourceManager at ben01/10.206.0.10:8032
+> 2022-07-27 09:38:32,917 INFO mapreduce.JobResourceUploader: Disabling Erasure Coding for path: /tmp/hadoop-yarn/staging/root/.staging/job_1658885211305_0002
+> 2022-07-27 09:38:33,181 INFO input.FileInputFormat: Total input files to process : 4
+> 2022-07-27 09:38:33,267 INFO mapreduce.JobSubmitter: number of splits:4
+> 2022-07-27 09:38:33,832 INFO mapreduce.JobSubmitter: Submitting tokens for job: job_1658885211305_0002
+> 2022-07-27 09:38:33,832 INFO mapreduce.JobSubmitter: Executing with tokens: []
+> 2022-07-27 09:38:34,002 INFO conf.Configuration: resource-types.xml not found
+> 2022-07-27 09:38:34,002 INFO resource.ResourceUtils: Unable to find 'resource-types.xml'.
+> 2022-07-27 09:38:34,055 INFO impl.YarnClientImpl: Submitted application application_1658885211305_0002
+> 2022-07-27 09:38:34,086 INFO mapreduce.Job: The url to track the job: http://ben01:8088/proxy/application_1658885211305_0002/
+> 2022-07-27 09:38:34,087 INFO mapreduce.Job: Running job: job_1658885211305_0002
+> 2022-07-27 09:38:41,181 INFO mapreduce.Job: Job job_1658885211305_0002 running in uber mode : false
+> 2022-07-27 09:38:41,182 INFO mapreduce.Job:  map 0% reduce 0%
+> 2022-07-27 09:38:52,312 INFO mapreduce.Job:  map 25% reduce 0%
+> 2022-07-27 09:38:53,322 INFO mapreduce.Job:  map 100% reduce 0%
+> 2022-07-27 09:38:57,359 INFO mapreduce.Job:  map 100% reduce 100%
+> 2022-07-27 09:38:57,375 INFO mapreduce.Job: Job job_1658885211305_0002 completed successfully
+> 2022-07-27 09:38:57,459 INFO mapreduce.Job: Counters: 54
+>         File System Counters
+>                 FILE: Number of bytes read=126
+>                 FILE: Number of bytes written=1363365
+>                 FILE: Number of read operations=0
+>                 FILE: Number of large read operations=0
+>                 FILE: Number of write operations=0
+>                 HDFS: Number of bytes read=447
+>                 HDFS: Number of bytes written=32
+>                 HDFS: Number of read operations=17
+>                 HDFS: Number of large read operations=0
+>                 HDFS: Number of write operations=2
+>                 HDFS: Number of bytes read erasure-coded=0
+>         Job Counters 
+>                 Launched map tasks=4
+>                 Launched reduce tasks=1
+>                 Data-local map tasks=4
+>                 Total time spent by all maps in occupied slots (ms)=40246
+>                 Total time spent by all reduces in occupied slots (ms)=2673
+>                 Total time spent by all map tasks (ms)=40246
+>                 Total time spent by all reduce tasks (ms)=2673
+>                 Total vcore-milliseconds taken by all map tasks=40246
+>                 Total vcore-milliseconds taken by all reduce tasks=2673
+>                 Total megabyte-milliseconds taken by all map tasks=41211904
+>                 Total megabyte-milliseconds taken by all reduce tasks=2737152
+>         Map-Reduce Framework
+>                 Map input records=6
+>                 Map output records=12
+>                 Map output bytes=120
+>                 Map output materialized bytes=144
+>                 Input split bytes=375
+>                 Combine input records=12
+>                 Combine output records=10
+>                 Reduce input groups=4
+>                 Reduce shuffle bytes=144
+>                 Reduce input records=10
+>                 Reduce output records=4
+>                 Spilled Records=20
+>                 Shuffled Maps =4
+>                 Failed Shuffles=0
+>                 Merged Map outputs=4
+>                 GC time elapsed (ms)=1627
+>                 CPU time spent (ms)=2840
+>                 Physical memory (bytes) snapshot=1411006464
+>                 Virtual memory (bytes) snapshot=13943873536
+>                 Total committed heap usage (bytes)=1187512320
+>                 Peak Map Physical memory (bytes)=309903360
+>                 Peak Map Virtual memory (bytes)=2796343296
+>                 Peak Reduce Physical memory (bytes)=201601024
+>                 Peak Reduce Virtual memory (bytes)=2792300544
+>         Shuffle Errors
+>                 BAD_ID=0
+>                 CONNECTION=0
+>                 IO_ERROR=0
+>                 WRONG_LENGTH=0
+>                 WRONG_MAP=0
+>                 WRONG_REDUCE=0
+>         File Input Format Counters 
+>                 Bytes Read=72
+>         File Output Format Counters 
+>                 Bytes Written=32
+> ~~~
+>
+> 
