@@ -1742,13 +1742,7 @@ less 或 tail -1000 $HADOOP_HOME/logs/yarn-{user.name}-{jobname}-{hostname}.log
 
 
 
-### 十二. YARN的执行原理
-
-在MR
-
-
-
-**这个阶段关机重启需要做的操作**
+### 阶段关机需要做的操作
 
 ~~~sh
 # 关机前需要关闭的服务，zk（zk需要三台机器都操作）、hadoop、作业任务
@@ -1778,6 +1772,10 @@ less 或 tail -1000 $HADOOP_HOME/logs/yarn-{user.name}-{jobname}-{hostname}.log
 ~~~
 
 
+
+### 十二. YARN的执行原理
+
+在MR
 
 
 
